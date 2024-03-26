@@ -25,3 +25,9 @@ docker compose up setup
 ```bash
 docker compose up -d
 ```
+
+you may need to run
+
+```bash
+chmod +rwx ./setup/entrypoint.sh
+```
