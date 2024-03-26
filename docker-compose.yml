@@ -1,0 +1,92 @@
+version: "3.8"
+# Links of used resources: https://github.com/Jardelpz/events_savior?tab=readme-ov-file and https://github.com/deviantony/docker-elk/tree/main?tab=readme-ov-file#host-setup should be mentionned in README.md ASAP
+#
+# By default, it is excluded from the services started by 'docker compose up'
+# due to the non-default profile it belongs to. To run it, either provide the
+# '--profile=setup' CLI flag to Compose commands, or "up" the service by name
+# such as 'docker compose up setup'.
+#
+# No http(80)/https(443) port are open, we presume that there will be a reverse proxy(nginx?), see network cloud
+
+services:
+    # setup script is a modified script from a github repo, check the link in the README.md, this prevents all the setup thing with
+    setup:
+        profiles:
+            - setup
+        build:
+            context: setup/
+            args:
+                ELASTIC_VERSION: ${ELASTIC_VERSION}
+        init: true
+        volumes:
+            - ./setup/entrypoint.sh:/entrypoint.sh:ro,Z
+            - ./setup/lib.sh:/lib.sh:ro,Z
+            - ./setup/roles:/roles:ro,Z
+        environment:
+            ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+            KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
+        networks:
+            - elk
+        depends_on:
+            - elasticsearch
+
+    elasticsearch:
+        image: elasticsearch:${ELASTIC_VERSION:-}
+        container_name: elasticsearch
+        ports:
+            - 9200:9200
+            - 9300:9300
+        environment:
+            ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+            discovery.type: single-node
+        volumes:
+            - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+            - elasticsearch:/usr/share/elasticsearch/data:Z
+        networks:
+            - elk
+        restart: always
+
+    kibana:
+        image: kibana:${ELASTIC_VERSION:-}
+        container_name: kibana
+        environment:
+            KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+        volumes:
+            - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+        networks:
+            - elk
+            - cloud
+        ports:
+            - 5601:5601
+        depends_on:
+            - elasticsearch
+        restart: always
+
+    # not used rn
+    # rabbitmq:
+    #     image: rabbitmq:3-management-alpine
+    #     ports:
+    #         - 5672:5672
+    #         - 15672:15672
+    #     volumes:
+    #         - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+    #         - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    #     networks:
+    #         - elk
+
+    # TODO add logstash later on?
+
+    # TODO redis for cashing?
+
+    # TODO apm & rabbitmq
+
+networks:
+    elk:
+        driver: bridge
+    cloud:
+        name: cloud
+        external: true
+
+volumes:
+    elasticsearch:
