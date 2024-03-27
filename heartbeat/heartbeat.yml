@@ -15,8 +15,7 @@ heartbeat.monitors:
           - "https://searxng.glad-pi.uk"
       # not only check if response, everything should be fine too (basic http ok code = 200)
       check.response.status: [200]
-      schedule: "@every 5s"
-      timeout: 15s
+      schedule: "@every 1s"
 
     - type: http
       enabled: true
@@ -26,7 +25,7 @@ heartbeat.monitors:
           - "http://elasticsearch:9200"
       username: "elastic"
       password: "integration-project-pwd"
-      schedule: "@every 5s"
+      schedule: "@every 1s"
 
 setup.template.settings:
     index.number_of_shards: 1
