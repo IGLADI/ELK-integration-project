@@ -2,6 +2,12 @@
 
 Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main> and <https://github.com/elastic/uptime-contrib>
 
+## Tech stack
+
+-   Docker
+-   ELK (elasticsearch, logstash, kibana)
+-   Heartbeat
+
 <!-- old version:
 to setup ELK: Setup keys via:
 docker exec -it <elastic_id> bash
@@ -13,6 +19,8 @@ docker exec -it <kibana_id> bash
 cd bin
 ./kibana-verification-code
 copy paste the verification code into the webui -->
+
+## Setup
 
 To start ELK run (keep in mind the reverse proxy should be in a network named `cloud`):
 
