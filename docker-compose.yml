@@ -61,6 +61,20 @@ services:
             - elasticsearch
         restart: always
 
+    heartbeat:
+        image: docker.elastic.co/beats/heartbeat:${ELASTIC_VERSION:-}
+        container_name: heartbeat
+        cap_add:
+            - NET_RAW
+        environment:
+            - strict.perms=false
+            - output.elasticsearch.hosts=["elasticsearch:9200"]
+        networks:
+            - elk
+        volumes:
+            - ./heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro,Z
+        restart: always
+
     # not used rn
     # rabbitmq:
     #     image: rabbitmq:3-management-alpine

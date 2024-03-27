@@ -1,6 +1,6 @@
 # ELK Stack integration project
 
-Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main?tab=readme-ov-file#host-setup>
+Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main>
 
 <!-- old version:
 to setup ELK: Setup keys via:
@@ -30,6 +30,7 @@ you may need to run
 
 ```bash
 chmod +rwx ./setup/entrypoint.sh
+chmod go-w ./heartbeat/heartbeat.yml
 ```
 
 If an error occurs due to the network try running:
