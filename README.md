@@ -20,21 +20,23 @@ To start ELK run (keep in mind the reverse proxy should be in a network named `c
 docker compose up setup
 ```
 
-& then:
+Note that this should be run only once.
+
+If an error occurs due to the network try running this instead:
+
+```bash
+docker compose up setup --force-recreate
+```
+
+After the setup is done you can run the ELK stack with:
 
 ```bash
 docker compose up -d
 ```
 
-you may need to run
+You may need to run the following to fix some permission issues:
 
 ```bash
 chmod +rwx ./setup/entrypoint.sh
 chmod go-w ./heartbeat/heartbeat.yml
-```
-
-If an error occurs due to the network try running:
-
-```bash
-docker compose up setup --force-recreate
 ```
