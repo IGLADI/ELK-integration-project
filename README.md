@@ -1,6 +1,6 @@
 # ELK Stack integration project
 
-Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main>
+Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main> and <https://github.com/elastic/uptime-contrib>
 
 <!-- old version:
 to setup ELK: Setup keys via:
@@ -40,3 +40,5 @@ You may need to run the following to fix some permission issues:
 chmod +rwx ./setup/entrypoint.sh
 chmod go-w ./heartbeat/heartbeat.yml
 ```
+
+Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana.
