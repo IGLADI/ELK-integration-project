@@ -1,6 +1,6 @@
 # ELK Stack integration project
 
-Links of used resources: <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main?tab=readme-ov-file#host-setup> should be mentionned in README.md ASAP
+Links of used resources: <https://www.elastic.co/guide/index.html> and <https://github.com/Jardelpz/events_savior?tab=readme-ov-file> and <https://github.com/deviantony/docker-elk/tree/main?tab=readme-ov-file#host-setup>
 
 <!-- old version:
 to setup ELK: Setup keys via:
@@ -14,7 +14,7 @@ cd bin
 ./kibana-verification-code
 copy paste the verification code into the webui -->
 
-To start ELK run:
+To start ELK run (keep in mind the reverse proxy should be in a network named `cloud`):
 
 ```bash
 docker compose up setup
@@ -30,4 +30,10 @@ you may need to run
 
 ```bash
 chmod +rwx ./setup/entrypoint.sh
+```
+
+If an error occurs due to the network try running:
+
+```bash
+docker compose up setup --force-recreate
 ```
