@@ -1,4 +1,4 @@
-# based on https://www.elastic.co/guide/en/beats/heartbeat/current/heartbeat-reference-yml.html
+# https://www.elastic.co/guide/en/beats/heartbeat/current/running-on-docker.html
 
 heartbeat.config.monitors:
     path: ./monitor*.yml
@@ -6,8 +6,27 @@ heartbeat.config.monitors:
     reload.enabled: true
     reload.period: 5s
 
-# this section had been deleted as we use separate monitor files
-# heartbeat.monitors:
+heartbeat.monitors:
+    - type: http
+      enabled: true
+      id: searxng
+      name: searxng
+      urls:
+          - "https://searxng.glad-pi.uk"
+      # not only check if response, everything should be fine too (basic http ok code = 200)
+      check.response.status: [200]
+      schedule: "@every 5s"
+      timeout: 15s
+
+    - type: http
+      enabled: true
+      id: elastic-rest-api
+      name: Elastic REST API
+      urls:
+          - "http://elasticsearch:9200"
+      username: "elastic"
+      password: "integration-project-pwd"
+      schedule: "@every 5s"
 
 setup.template.settings:
     index.number_of_shards: 1
