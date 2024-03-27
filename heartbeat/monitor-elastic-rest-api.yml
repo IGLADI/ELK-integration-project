@@ -1,0 +1,11 @@
+- type: http
+  enabled: true
+  id: elastic-rest-api
+  name: Elastic REST API
+  urls:
+      - "http://elasticsearch:9200"
+  username: "elastic"
+  password: "integration-project-pwd"
+  # TODO check status?
+  schedule: "@every 5s"
+  timeout: 15s
