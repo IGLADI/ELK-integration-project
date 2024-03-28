@@ -2,12 +2,19 @@
 
 ![Dashboard](image.png)
 
-## Used resources
+## Used/interesting resources
 
--   Official docs: <https://www.elastic.co/guide/index.html>
--   No code used but pretty interesting to read: <https://github.com/Jardelpz/events_savior?tab=readme-ov-file>
--   SEE [MIT LICENSE](./LICENSE.txt) setup script and also inspiration from reading their code base <https://github.com/deviantony/docker-elk/tree/main>
--   SEE [APACHE LICENSE](./LICENSE2.txt) dashboard resources used form their 7.x dashboard <https://github.com/elastic/uptime-contrib>
+-   [Official ELK docs](https://www.elastic.co/guide/index.html)
+-   [RabbitMQ training course](https://training.cloudamqp.com/)
+-   No code used but pretty interesting to read: [check them out](https://github.com/Jardelpz/events_savior?tab=readme-ov-file)
+-   [Used repo 1](https://github.com/deviantony/docker-elk) setup script and also inspiration from reading their code base FOLLOW THEIR [MIT LICENSE](https://github.com/deviantony/docker-elk/blob/main/LICENSE)! or [BACKUP LINK](./LICENSE1.txt)
+-   [Used repo 2](https://github.com/elastic/uptime-contrib) dashboard resources used form their 7.x dashboard FOLLOW THEIR [APACHE LICENSE](https://github.com/elastic/uptime-contrib/blob/master/LICENSE)! or [BACKUP LINK](./LICENSE2.txt)
+-   [YTB NetworkChuck tutorial docker](https://www.youtube.com/watch?v=eGz9DS-aIeY)
+-   [YTB NetworkChuck tutorial docker compose](https://www.youtube.com/watch?v=DM65_JyGxCo)
+-   [YTB IBM message queue](https://www.youtube.com/watch?v=xErwDaOc-Gs)
+-   [YTB IBM RabbitMQ](https://www.youtube.com/watch?v=7rkeORD4jSw)
+-   [YTB ELK tutorial 1 part 1](https://www.youtube.com/watch?v=MB94whqmSKI) & [YTB ELK guide 1 part 2](https://www.youtube.com/watch?v=JcGIFmkg1bE)
+-   [YTB ELK tutorial 2 (french)](https://www.youtube.com/watch?v=S5MyeD8ysxA)
 
 ## Tech stack
 
