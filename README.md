@@ -38,7 +38,7 @@ copy paste the verification code into the webui -->
 
 ## Setup
 
-To start ELK run (keep in mind the reverse proxy should be in a network named `cloud`):
+To start ELK for the first time run (keep in mind the reverse proxy (if you use one, port 5601 is used for the web interface rn, feel free to unasign it if you have one) should be in a network named `cloud`):
 
 ```bash
 docker compose up setup
@@ -52,7 +52,7 @@ If an error occurs due to the network try running this instead:
 docker compose up setup --force-recreate
 ```
 
-After the setup is done you can run the ELK stack with:
+After the setup is done you can run the ELK stack with (for the second time you will only need to run this command):
 
 ```bash
 docker compose up -d
@@ -65,4 +65,4 @@ chmod +rwx ./setup/entrypoint.sh
 chmod go-w ./heartbeat/heartbeat.yml
 ```
 
-Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana.
+Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore)
