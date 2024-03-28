@@ -65,4 +65,5 @@ chmod +rwx ./setup/entrypoint.sh
 chmod go-w ./heartbeat/heartbeat.yml
 ```
 
-Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore)
+<!-- deprecate
+Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->
