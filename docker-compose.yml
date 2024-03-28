@@ -3,8 +3,6 @@ version: "3.8"
 # due to the non-default profile it belongs to. To run it, either provide the
 # '--profile=setup' CLI flag to Compose commands, or "up" the service by name
 # such as 'docker compose up setup'.
-#
-# No http(80)/https(443) port are open, we presume that there will be a reverse proxy(nginx?), see network cloud
 
 services:
     # setup script is a modified script from a github repo, check the link in the README.md, this prevents all the setup thing with
@@ -54,7 +52,6 @@ services:
             - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
         networks:
             - elk
-            - cloud
         ports:
             - 5601:5601
         depends_on:
@@ -96,9 +93,6 @@ services:
 networks:
     elk:
         driver: bridge
-    cloud:
-        name: cloud
-        external: true
 
 volumes:
     elasticsearch:
