@@ -37,7 +37,7 @@ services:
             discovery.type: single-node
         volumes:
             - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
-            - ./elasticsearch/volume:/usr/share/elasticsearch/data:Z
+            - elasticsearch:/usr/share/elasticsearch/data:Z
         networks:
             - elk
         restart: always
@@ -93,3 +93,6 @@ services:
 networks:
     elk:
         driver: bridge
+
+volumes:
+    elasticsearch:
