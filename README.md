@@ -44,7 +44,7 @@ To start ELK for the first time run (keep in mind the reverse proxy (if you use 
 docker compose up setup
 ```
 
-Note that this should be run only once.
+Note that this should be run only once, and if you don't move the `elasticsearch/data` folder or move the volumes location this should already be good to go.
 
 If an error occurs due to the network try running this instead:
 
@@ -58,12 +58,15 @@ After the setup is done you can run the ELK stack with (for the second time you 
 docker compose up -d
 ```
 
-You may need to run the following to fix some permission issues:
+You may need to run the following to fix some permission issues depending on your platform:
 
 ```bash
 chmod +rwx ./setup/entrypoint.sh
 chmod go-w ./heartbeat/heartbeat.yml
+chmod -R 777 ./elasticsearch/data/
 ```
+
+Note that the last chmod recursively add all permissions to everyone, if this is set on a real server with untrusted users please change this to only give the required permissions.
 
 <!-- deprecate
 Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->
