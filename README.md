@@ -38,6 +38,8 @@ copy paste the verification code into the webui -->
 
 ## Setup
 
+Create a `.env` file based on the `.env.example` file and fill in the required fields.
+
 To start ELK for the first time run (keep in mind the reverse proxy (if you use one, port 5601 is used for the web interface rn, feel free to unasign it if you have one) should be in a network named `cloud`):
 
 ```bash
