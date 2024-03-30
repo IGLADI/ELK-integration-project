@@ -1,0 +1,2 @@
+#pip install -r requirements.txt
+pika>=1.1.0
