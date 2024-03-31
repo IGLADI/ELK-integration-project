@@ -1,0 +1,9 @@
+- type: http
+  enabled: true
+  id: searxng
+  name: searxng
+  urls:
+      - "https://searxng.glad-pi.uk"
+  # not only check if response, everything should be fine too (basic http ok code = 200)
+  check.response.status: [200]
+  schedule: "@every 1s"
