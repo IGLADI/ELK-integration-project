@@ -44,7 +44,7 @@ To start ELK for the first time run (keep in mind the reverse proxy should be in
 docker compose up setup
 ```
 
-**Note** that this should be run only once, and if you don't move the `./ELK/elasticsearch/data` folder or move the volumes location inside `./src/docker-compose.yml` this should already be good to go.
+**Note** that this should be run only once.
 
 If an error occurs due to the network try running this instead:
 
