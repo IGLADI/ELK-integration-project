@@ -24,7 +24,7 @@ heartbeat.monitors:
       urls:
           - "http://elasticsearch:9200"
       username: "elastic"
-      password: "integration-project-pwd"
+      password: ${ELASTIC_PASSWORD}
       schedule: "@every 1s"
 
 setup.template.settings:
@@ -50,4 +50,4 @@ output.elasticsearch:
     # api_key: "${ES_API_KEY}"
     # TODO change this to a dedicated user: https://www.elastic.co/guide/en/beats/heartbeat/current/privileges-to-publish-events.html or api
     username: "elastic"
-    password: "integration-project-pwd"
+    password: ${ELASTIC_PASSWORD}

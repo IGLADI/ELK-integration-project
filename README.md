@@ -26,19 +26,19 @@
 
 ## Setup
 
-Create a `.env` file based on the `.env.example` file inside the `config` folder and fill in the required fields.
-
-```bash
-cp ./config/.env.example ./config/.env
-```
-
-Then go into the src folder:
+Go into the `./src` folder:
 
 ```bash
 cd src
 ```
 
-To start ELK for the first time run (keep in mind the reverse proxy should be in a network named `cloud` (if you use one, port 5601 is standard used for the web interface, feel free to unasign it inside `./src/docker-compose.yml` if you have one)):
+Create a `.env` file based on the `.env.example` file inside the `./src` folder and **fill in the required fields**.
+
+```bash
+cp ./.env.example ./.env
+```
+
+To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 5601 is standard used for the web interface, feel free to unasign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
 
 ```bash
 docker compose up setup
@@ -63,7 +63,7 @@ docker compose up -d
 You may need to run the following to fix some permission issues depending on your platform (in the home folder not src):
 
 ```bash
-chmod +rwx ./setup/entrypoint.sh
+chmod +rwx ./src/setup/entrypoint.sh
 chmod go-w ./ELK/heartbeat/heartbeat.yml
 chmod -R 777 ./ELK/elasticsearch/data/
 ```

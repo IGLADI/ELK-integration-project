@@ -10,12 +10,9 @@ services:
         profiles:
             - setup
         build:
-            context: ../setup/
+            context: ./setup/
             args:
                 ELASTIC_VERSION: ${ELASTIC_VERSION}
-        env_file:
-            - path: ../config/.env
-              required: true
         init: true
         volumes:
             - ./setup/entrypoint.sh:/entrypoint.sh:ro,Z
@@ -32,9 +29,6 @@ services:
     elasticsearch:
         image: elasticsearch:${ELASTIC_VERSION:-}
         container_name: elasticsearch
-        env_file:
-            - path: ../config/.env
-              required: true
         ports:
             - 9200:9200
             - 9300:9300
@@ -42,8 +36,8 @@ services:
             ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
             discovery.type: single-node
         volumes:
-            - ./ELK/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
-            - ./ELK/elasticsearch/data:/usr/share/elasticsearch/data:Z
+            - ../ELK/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+            - ../ELK/elasticsearch/data:/usr/share/elasticsearch/data:Z
         networks:
             - elk
         restart: always
@@ -51,14 +45,11 @@ services:
     kibana:
         image: kibana:${ELASTIC_VERSION:-}
         container_name: kibana
-        env_file:
-            - path: ../config/.env
-              required: true
         environment:
             KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
             ELASTICSEARCH_HOSTS: http://elasticsearch:9200
         volumes:
-            - ./ELK/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+            - ../ELK/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
         networks:
             - elk
         ports:
@@ -70,9 +61,7 @@ services:
     heartbeat:
         image: docker.elastic.co/beats/heartbeat:${ELASTIC_VERSION:-}
         container_name: heartbeat
-        env_file:
-            - path: ../config/.env
-              required: true
+        env_file: ./.env
         cap_add:
             - NET_RAW
         environment:
@@ -81,7 +70,7 @@ services:
         networks:
             - elk
         volumes:
-            - ./ELK/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro,Z
+            - ../ELK/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro,Z
         restart: always
 
     # not used rn
