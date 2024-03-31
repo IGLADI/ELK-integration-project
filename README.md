@@ -70,6 +70,30 @@ chmod -R 777 ./ELK/elasticsearch/data/
 
 **Note** that the last chmod recursively add all permissions to everyone, if this is set on a real server with untrusted users please change this to only give the required permissions.
 
+## Adding services to monitor
+### Heartbeat monitoring
+
+If you'd like to add a service to monitor, please follow these steps:
+
+Considering you're in the `./src` folder, run:
+```bash
+cd ../ELK/heartbeat/services
+```
+
+Create a `service.yml.unconfirmed` file based on the `template.yml.unconfirmed` file inside the `./ELK/heartbeat/services` folder.
+
+```bash
+cp ./template.yml.unconfirmed ./service.yml.unconfirmed
+```
+
+Now **fill in the required fields**.
+
+Once filled in correctly, modify the name accordingly (modify the name of the service to the actual service):
+```bash
+mv ./service.yml.unconfirmed ./service.yml
+```
+
+
 <!-- deprecate as we have set the volume in the repo
 Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->
 

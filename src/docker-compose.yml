@@ -71,6 +71,7 @@ services:
             - elk
         volumes:
             - ../ELK/heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro,Z
+            - ../ELK/heartbeat/services:/usr/share/heartbeat/services
         restart: always
 
     # not used rn

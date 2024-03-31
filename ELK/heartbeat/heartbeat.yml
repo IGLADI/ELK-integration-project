@@ -1,31 +1,10 @@
 # https://www.elastic.co/guide/en/beats/heartbeat/current/running-on-docker.html
 
 heartbeat.config.monitors:
-    path: ./monitor*.yml
+    path: /usr/share/heartbeat/services/*.yml
     # update monitors dynamically without restart
     reload.enabled: true
     reload.period: 5s
-
-heartbeat.monitors:
-    - type: http
-      enabled: true
-      id: searxng
-      name: searxng
-      urls:
-          - "https://searxng.glad-pi.uk"
-      # not only check if response, everything should be fine too (basic http ok code = 200)
-      check.response.status: [200]
-      schedule: "@every 1s"
-
-    - type: http
-      enabled: true
-      id: elastic-rest-api
-      name: Elastic REST API
-      urls:
-          - "http://elasticsearch:9200"
-      username: "elastic"
-      password: ${ELASTIC_PASSWORD}
-      schedule: "@every 1s"
 
 setup.template.settings:
     index.number_of_shards: 1
