@@ -101,6 +101,25 @@ mv ./service.yml.unconfirmed ./service.yml
 -   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
 -   If you temporarely don't want to monitor a service you can set `enabled: false` in the yml file.
 
+## Tests:
+
+### docker-compose test
+
+In case you'd like to verify the integrity of the `docker-compose.yml` file, follow the steps below.
+
+If you've never done a docker-compose test, please execute the following command first:
+
+```bash
+sudo apt install docker-compose
+```
+**Note** your packet manager may differ. 
+
+Once docker-compose is installed, please run the following command. If the file is good to go, it should return "OK". Else, it'll return "ERROR":
+
+```bash
+docker-compose config --quiet && printf "OK\n" || printf "ERROR\n"
+```
+
 ## Website tips:
 
 ### Periodic refresh of the dashboard:
