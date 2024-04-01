@@ -15,6 +15,7 @@
 -   [YTB IBM RabbitMQ](https://www.youtube.com/watch?v=7rkeORD4jSw)
 -   [YTB ELK tutorial 1 part 1](https://www.youtube.com/watch?v=MB94whqmSKI) & [YTB ELK guide 1 part 2](https://www.youtube.com/watch?v=JcGIFmkg1bE)
 -   [YTB ELK tutorial 2 (french)](https://www.youtube.com/watch?v=S5MyeD8ysxA)
+-   [Heartbeat installation configuration](https://www.elastic.co/guide/en/beats/heartbeat/current/heartbeat-installation-configuration.html)
 
 ## Tech stack
 
@@ -120,6 +121,44 @@ Once docker-compose is installed, please run the following command. If the file 
 docker-compose config --quiet && printf "OK\n" || printf "ERROR\n"
 ```
 
+### yaml validation
+
+First off, make sure the project is running. If it isn't running, please do so [here](README.md#Setup).
+
+Secondly, you'll need to enter the container. To do so, there's a few steps to follow.
+
+Get the required information of the container with the following command:
+
+```bash
+sudo docker container ls | grep heartbeat
+```
+
+Now, look for the container running heartbeat. Use the ID for the following command:
+
+```bash
+sudo docker exec -it <id> bash
+```
+
+Inside the container, you can validate the content of the yaml file with the commands written below.
+
+To validate the content of the yaml, enter the following command:
+
+```bash
+./heartbeat test config -c ./heartbeat.yml --path.data ~/data/ --path.home ~ 
+```
+
+If there are any errors and you'd like to see a more detailed explanation of what's good and wrong, use this command:
+
+```bash
+./heartbeat test output -c ./heartbeat.yml --path.data ~/data/ --path.home ~
+```
+
+Once finished, exit the container with the following command:
+
+```bash
+exit
+```
+
 ## Website tips:
 
 ### Periodic refresh of the dashboard:
@@ -151,7 +190,7 @@ And finally reload the page:
 The `current status` has a default threshold of 20s, which means that, if a services in the last 20s has both been up and down, it will be counted as both. The 'donut' in kibana sadly doesn't allow us to pick the last status.
 ![Current Status](./screenshots/current_status.png)
 
-`Services` will always show the last status per ip & service during the monitoring time (see top right corner or the screenshot at `Periodic refresh of the dashboard`, you can also set a custom time range inside the panel settings), this means if a services changes ip during the monitoring time it will show up as two different services and you will always see the last status measured of each ip. To see this in action, you can try monitoring google.com as it constantly changes ip's.
+`Services` will always show the last status per ip & service during the monitoring time (see [this](README.md#Periodic-refresh-of-the-dashboard), you can also set a custom time range inside the panel settings), this means if a services changes ip during the monitoring time it will show up as two different services and you will always see the last status measured of each ip. To see this in action, you can try monitoring google.com as it constantly changes ip's.
 ![Services](./screenshots/services.png)
 
 The `accumulative uptime` counts all recorded uptimes and downtimes and calculates the uptime percentage based on it. This means that, if during 20% of the monitoring time 50% of the services were down, the downtime will be 10% (50% of 20%) and the uptime will be 90% (100% - 10%).
