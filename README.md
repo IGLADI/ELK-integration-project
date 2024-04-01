@@ -104,6 +104,22 @@ mv ./service.yml.unconfirmed ./service.yml
 
 ## Tests:
 
+### run all tests at once
+
+If you'd like to verify everything at once, there's a few steps to follow.
+
+You'll first need to enter `./src`. To do so, type this in your console:
+
+```bash
+cd ./src
+```
+
+After that, you'll need to run the `tests-script.bash` file. To do this, copy the following text to your CLI:
+
+```bash
+sudo bash ./tests-script.bash
+```
+
 ### docker-compose test
 
 In case you'd like to verify the integrity of the `docker-compose.yml` file, follow the steps below.
@@ -144,13 +160,13 @@ Inside the container, you can validate the content of the yaml file with the com
 To validate the content of the yaml, enter the following command:
 
 ```bash
-./heartbeat test config -c ./heartbeat.yml --path.data ~/data/ --path.home ~ 
+./heartbeat test config -c ~/heartbeat.yml --path.data ~/data/ --path.home ~ 
 ```
 
 If there are any errors and you'd like to see a more detailed explanation of what's good and wrong, use this command:
 
 ```bash
-./heartbeat test output -c ./heartbeat.yml --path.data ~/data/ --path.home ~
+./heartbeat test output -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
 ```
 
 Once finished, exit the container with the following command:
