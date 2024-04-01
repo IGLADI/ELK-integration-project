@@ -1,6 +1,6 @@
 # ELK Controlroom Integration Project
 
-![Dashboard](dashboard.png)
+![Dashboard](./screenshots/dashboard.png)
 
 ## Used/interesting resources
 
@@ -38,7 +38,7 @@ Create a `.env` file based on the `.env.example` file inside the `./src` folder 
 cp ./.env.example ./.env
 ```
 
-To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 5601 is standard used for the web interface, feel free to unasign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
+To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 5601 is used for the web interface by default, feel free to unassign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
 
 ```bash
 docker compose up setup
@@ -46,13 +46,13 @@ docker compose up setup
 
 **Note** that this should be run only once.
 
-If an error occurs due to the network try running this instead:
+If an error occurs due to the network, try running this instead:
 
 ```bash
 docker compose up setup --force-recreate
 ```
 
-After the setup is done you can run the ELK stack with (for the second time you will only need to run this command):
+After the setup is done, you can run the ELK stack with (for the second time you will only need to run this command):
 
 ```bash
 docker compose up -d
@@ -60,7 +60,7 @@ docker compose up -d
 
 ## Troubleshooting
 
-You may need to run the following to fix some permission issues depending on your platform (in the home folder not src):
+You may need to run the following to fix some permission issues depending on your platform (in the home folder, not src folder):
 
 ```bash
 chmod +rwx ./src/setup/entrypoint.sh
@@ -69,7 +69,7 @@ chmod -R go-w ./ELK/heartbeat/services/
 chmod -R 777 ./ELK/elasticsearch/data/
 ```
 
-**Note** the last chmod recursively add all permissions to everyone, if this is set on a real server with untrusted users please change this to only give the required permissions.
+**Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
 
 ## Adding services to monitor
 
@@ -98,8 +98,48 @@ mv ./service.yml.unconfirmed ./service.yml
 **Notes**
 
 -   We check for new yml files every 5s, consider it may take up to 10s (with both the dashboard and the service set to reload every second) before showing up.
--   While a yml file isn't configured properly we recommend to keep the `.unconfirmed` extension.
+-   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
 -   If you temporarely don't want to monitor a service you can set `enabled: false` in the yml file.
+
+## Website tips:
+
+### Periodic refresh of the dashboard:
+
+You can set the refresh rate of the dashboard in the top right corner of the dashboard like this:
+![Refresh rate](./screenshots/refresh_rate.png)
+
+Like this you'll have a real-time overview. This way you can drink your coffee rather than spamming the refresh-key and be alerted the moment something goes wrong.
+
+### Enable dark mode:
+
+Click on your profile picture in the top right corner:
+![Profile](./screenshots/profile.png)
+
+Then click on `Edit profile`:
+![Edit profile](./screenshots/edit_profile.png)
+
+Then select `Dark`:
+![Dark mode](./screenshots/dark_mode.png)
+
+And click on `Save changes`:
+![Save changes](./screenshots/save_changes.png)
+
+And finally reload the page:
+![Reload](./screenshots/reload.png)
+
+### Dashboard notes:
+
+The `current status` has a default threshold of 20s, which means that, if a services in the last 20s has both been up and down, it will be counted as both. The 'donut' in kibana sadly doesn't allow us to pick the last status.
+![Current Status](./screenshots/current_status.png)
+
+`Services` will always show the last status per ip & service during the monitoring time (see top right corner or the screenshot at `Periodic refresh of the dashboard`, you can also set a custom time range inside the panel settings), this means if a services changes ip during the monitoring time it will show up as two different services and you will always see the last status measured of each ip. To see this in action, you can try monitoring google.com as it constantly changes ip's.
+![Services](./screenshots/services.png)
+
+The `accumulative uptime` counts all recorded uptimes and downtimes and calculates the uptime percentage based on it. This means that, if during 20% of the monitoring time 50% of the services were down, the downtime will be 10% (50% of 20%) and the uptime will be 90% (100% - 10%).
+![Accumulative uptime](./screenshots/accumulative_uptime.png)
+
+The `uptime graph` depicts the percentage of services that were up during a specific time frame. This graph will automatically adjust itself according to the interval selected at the top on the right.
+![Uptime graph](./screenshots/uptime_graph.png)
 
 <!-- deprecate as we have set the volume in the repo
 Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->
