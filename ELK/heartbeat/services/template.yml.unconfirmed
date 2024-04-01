@@ -1,4 +1,4 @@
-type: http
+- type: http
   enabled: true
   id: google
   name: google
