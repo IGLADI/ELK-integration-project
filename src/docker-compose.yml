@@ -74,6 +74,13 @@ services:
             - ../ELK/heartbeat/services:/usr/share/heartbeat/services
         restart: always
 
+    consumer:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: consumer
+        restart: always
+
     # not used rn
     # rabbitmq:
     #     image: rabbitmq:3-management-alpine
@@ -85,12 +92,6 @@ services:
     #         - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     #     networks:
     #         - elk
-
-    # TODO add logstash later on?
-
-    # TODO redis for cashing?
-
-    # TODO rabbitmq
 
     # TODO alert: send it team an email when a service is down
 
