@@ -9,6 +9,7 @@
 -   Heartbeat (http monitoring for redundancy + may help with debugging)
 -   Python
 -   RabbitMQ (WIP)
+-   Bash/Shell scripting
 
 ## Setup
 
@@ -24,19 +25,13 @@ Create a `.env` file based on the `.env.example` file inside the `./src` folder 
 cp ./.env.example ./.env
 ```
 
-To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 16601 is used for the web interface by default, feel free to unassign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
-
-```bash
-docker compose up setup
-```
-
-**Note** that this should be run only once.
-
-If an error occurs due to the network, try running this instead:
+To start ELK for the first time run:
 
 ```bash
 docker compose up setup --force-recreate
 ```
+
+**Note** that this should be run only once.
 
 After the setup is done, you can run the ELK stack with (for the second time you will only need to run this command):
 
@@ -44,18 +39,11 @@ After the setup is done, you can run the ELK stack with (for the second time you
 docker compose up -d
 ```
 
-## Troubleshooting
+Now you can access the dashboard via <http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))>
 
-You may need to run the following to fix some permission issues depending on your platform (in the home folder, not src folder):
+After clicking the link, enter your login credentials and you'll be redirected to the monitoring dashboard. The default username is `elastic` (will be modifiable in .env), and the password is what you've entered in the `KIBANA_SYSTEM_PASSWORD` variable in your `./src/.env` file.
 
-```bash
-chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
-chmod -R go-w ./ELK/heartbeat/services/
-chmod -R 777 ./ELK/elasticsearch/data/
-```
-
-**Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
+**Note** replace localhost with your local IP.
 
 ## Adding services to monitor
 
@@ -87,6 +75,31 @@ mv ./service.yml.unconfirmed ./service.yml
 -   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
 -   If you temporarely don't want to monitor a service you can set `enabled: false` in the yml file.
 
+## Troubleshooting
+
+### Fixing permissions
+
+You may need to run the following to fix some permission issues depending on your platform (in the home folder, not src folder):
+
+```bash
+chmod +rwx ./src/setup/entrypoint.sh
+chmod go-w ./ELK/heartbeat/heartbeat.yml
+chmod -R go-w ./ELK/heartbeat/services/
+chmod -R 777 ./ELK/elasticsearch/data/
+```
+
+**Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
+
+### Reverse-proxy
+
+If you're using a reverse proxy, keep in mind it should still be on the same network. You could create a new one and add Kibana to it if you wish to do so (if you do end up using one, port 16601 is used for the web interface, feel free to unassign it inside `./src/docker-compose.yml` if you use a reverse proxy). Inside the reverse proxy, point it towards this destination: `http://kibana:5601/`.
+
+### First-time loading issues web UI
+
+Whilst the service is starting up, you may have issues whilst loading the web interface, with random issues popping up that aren't related to what you're doing. To counter this, wait about a minute, then refresh your page.
+
+**Note** You may also want to check [tests][README.md#Tests], or check the container logs with `docker logs <container_id>`.
+
 ## Tests
 
 ### run all tests at once
@@ -105,9 +118,9 @@ After that, you'll need to run the `tests-script.bash` file. To do this, copy th
 sudo bash ./tests-script.bash
 ```
 
-## Run tests individually
+### Run tests individually
 
-### docker-compose test
+#### docker-compose validation
 
 In case you'd like to verify the integrity of the `docker-compose.yml` file, follow the steps below.
 
@@ -125,7 +138,7 @@ Once docker-compose is installed, please run the following command. If the file 
 docker-compose config --quiet && printf "OK\n" || printf "ERROR\n"
 ```
 
-### yaml validation
+#### yaml validation
 
 First off, make sure the project is running. If it isn't running, please do so [here](README.md#Setup).
 
@@ -212,21 +225,10 @@ And finally reload the page:
 <!-- deprecate as we have set the volume in the repo
 Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->
 
-<!-- old version:
-to setup ELK: Setup keys via:
-docker exec -it <elastic_id> bash
-cd bin
-elasticsearch-create-enrollment-token --scope kibana
-copy paste the token into the webui
-
-docker exec -it <kibana_id> bash
-cd bin
-./kibana-verification-code
-copy paste the verification code into the webui -->
-
 ## Used/interesting resources
 
 -   [Official ELK docs](https://www.elastic.co/guide/index.html)
+-   [Heartbeat installation configuration](https://www.elastic.co/guide/en/beats/heartbeat/current/heartbeat-installation-configuration.html)
 -   [RabbitMQ training course](https://training.cloudamqp.com/)
 -   No code used but pretty interesting to read: [check them out](https://github.com/Jardelpz/events_savior?tab=readme-ov-file)
 -   [Used repo 1](https://github.com/deviantony/docker-elk) setup script and also inspiration from reading their code base **FOLLOW THEIR [MIT LICENSE](https://github.com/deviantony/docker-elk/blob/main/LICENSE)!** or [BACKUP LINK](./MIT_LICENSE.txt)
@@ -237,4 +239,3 @@ copy paste the verification code into the webui -->
 -   [YTB IBM RabbitMQ](https://www.youtube.com/watch?v=7rkeORD4jSw)
 -   [YTB ELK tutorial 1 part 1](https://www.youtube.com/watch?v=MB94whqmSKI) & [YTB ELK guide 1 part 2](https://www.youtube.com/watch?v=JcGIFmkg1bE)
 -   [YTB ELK tutorial 2 (french)](https://www.youtube.com/watch?v=S5MyeD8ysxA)
--   [Heartbeat installation configuration](https://www.elastic.co/guide/en/beats/heartbeat/current/heartbeat-installation-configuration.html)
