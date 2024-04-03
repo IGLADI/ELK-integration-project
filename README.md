@@ -2,7 +2,6 @@
 
 ![Dashboard](./screenshots/dashboard.png)
 
-
 ## Tech stack
 
 -   Docker
@@ -25,7 +24,7 @@ Create a `.env` file based on the `.env.example` file inside the `./src` folder 
 cp ./.env.example ./.env
 ```
 
-To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 5601 is used for the web interface by default, feel free to unassign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
+To start ELK for the first time run (keep in mind the reverse proxy should be in the same network (you could create a new one and add kibana to it) (if you use one, port 16601 is used for the web interface by default, feel free to unassign it inside `./src/docker-compose.yml` if you use a reverse proxy)):
 
 ```bash
 docker compose up setup
@@ -117,7 +116,8 @@ If you've never done a docker-compose test, please execute the following command
 ```bash
 sudo apt install docker-compose
 ```
-**Note** your packet manager may differ. 
+
+**Note** your packet manager may differ.
 
 Once docker-compose is installed, please run the following command. If the file is good to go, it should return "OK". Else, it'll return "ERROR":
 
@@ -148,7 +148,7 @@ Inside the container, you can validate the content of the yaml file with the com
 To validate the content of the yaml, enter the following command:
 
 ```bash
-./heartbeat test config -c ~/heartbeat.yml --path.data ~/data/ --path.home ~ 
+./heartbeat test config -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
 ```
 
 If there are any errors and you'd like to see a more detailed explanation of what's good and wrong, use this command:
@@ -163,6 +163,12 @@ Once finished, exit the container with the following command:
 exit
 ```
 
+## Used ports (assigned range:16000-23999)
+
+-   16601 (kibana, this would typically be 5601)
+-   19200 (elasticsearch API, this would typically be 9200)
+-   19300 (elasticsearch binary protocol, this would typically be 9300)
+
 ## Website tips:
 
 ### Periodic refresh of the dashboard:
@@ -171,6 +177,20 @@ You can set the refresh rate of the dashboard in the top right corner of the das
 ![Refresh rate](./screenshots/refresh_rate.png)
 
 Like this you'll have a real-time overview. This way you can drink your coffee rather than spamming the refresh-key and be alerted the moment something goes wrong.
+
+### Dashboard notes:
+
+The `current status` has a default threshold of 20s, which means that, if a services in the last 20s has both been up and down, it will be counted as both. The 'donut' in kibana sadly doesn't allow us to pick the last status.
+![Current Status](./screenshots/current_status.png)
+
+`Services` will always show the last status per ip & service during the monitoring time (see [this](README.md#Periodic-refresh-of-the-dashboard), you can also set a custom time range inside the panel settings), this means if a services changes ip during the monitoring time it will show up as two different services and you will always see the last status measured of each ip. To see this in action, you can try monitoring google.com as it constantly changes ip's.
+![Services](./screenshots/services.png)
+
+The `accumulative uptime` counts all recorded uptimes and downtimes and calculates the uptime percentage based on it. This means that, if during 20% of the monitoring time 50% of the services were down, the downtime will be 10% (50% of 20%) and the uptime will be 90% (100% - 10%).
+![Accumulative uptime](./screenshots/accumulative_uptime.png)
+
+The `uptime graph` depicts the percentage of services that were up during a specific time frame. This graph will automatically adjust itself according to the interval selected at the top on the right.
+![Uptime graph](./screenshots/uptime_graph.png)
 
 ### Enable dark mode:
 
@@ -188,20 +208,6 @@ And click on `Save changes`:
 
 And finally reload the page:
 ![Reload](./screenshots/reload.png)
-
-### Dashboard notes:
-
-The `current status` has a default threshold of 20s, which means that, if a services in the last 20s has both been up and down, it will be counted as both. The 'donut' in kibana sadly doesn't allow us to pick the last status.
-![Current Status](./screenshots/current_status.png)
-
-`Services` will always show the last status per ip & service during the monitoring time (see [this](README.md#Periodic-refresh-of-the-dashboard), you can also set a custom time range inside the panel settings), this means if a services changes ip during the monitoring time it will show up as two different services and you will always see the last status measured of each ip. To see this in action, you can try monitoring google.com as it constantly changes ip's.
-![Services](./screenshots/services.png)
-
-The `accumulative uptime` counts all recorded uptimes and downtimes and calculates the uptime percentage based on it. This means that, if during 20% of the monitoring time 50% of the services were down, the downtime will be 10% (50% of 20%) and the uptime will be 90% (100% - 10%).
-![Accumulative uptime](./screenshots/accumulative_uptime.png)
-
-The `uptime graph` depicts the percentage of services that were up during a specific time frame. This graph will automatically adjust itself according to the interval selected at the top on the right.
-![Uptime graph](./screenshots/uptime_graph.png)
 
 <!-- deprecate as we have set the volume in the repo
 Then you need to import `export.ndjson` into `Saved Objects` and you should see the dashboard appear in kibana. (If we add the volumes into the repo this will not be needed anymore) -->

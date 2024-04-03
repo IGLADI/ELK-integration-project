@@ -12,7 +12,7 @@ setup.template.settings:
     #_source.enabled: false
 
 setup.kibana:
-    host: "https://kibana:5601"
+    host: "https://kibana:16601"
 
     # Kibana Space ID
     # ID of the Kibana Space into which the dashboards should be loaded. By default,
