@@ -37,9 +37,12 @@ def main():
             root = ET.fromstring(message)
             for child in root:
                 print(child.tag, child.text)
-            Elasticsearch(["http://elasticsearch:9200"]).index(index="heartbeat", body=message)
         except ET.ParseError:
             print("\33[31mError parsing XML\33[0m")
+        try:
+            Elasticsearch(["http://elasticsearch:9200"]).index(index="heartbeat", body=message)
+        except Exception as e:
+            print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
 
     # this queue = routing key from publisher
     channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
