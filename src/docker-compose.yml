@@ -79,7 +79,9 @@ services:
             context: ./consumer
             dockerfile: ./Dockerfile
         container_name: consumer
-        env_file: ./.env
+        env_file: ../.env
+        volumes:
+            - ./consumer/heartbeat_rabbitmq.csv:./heartbeat_rabbitmq.csv
         networks:
             - elk
         depends_on:
