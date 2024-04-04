@@ -32,6 +32,8 @@ def main():
     print(f"Password: {elastic_password}")
     print("=====================================")
 
+    thread_kill = False
+
     # services to monitor
     services = []
     global services_last_timestamp
@@ -75,8 +77,12 @@ def main():
 
     def check_service_down(service):
         global services_last_timestamp
+        global thread_kill
 
         while True:
+            if thread_kill:
+                break
+            
             current_timestamp = int(time.time())
             # this means we haven't received a heartbeat in 2s since the last one was sent
             if current_timestamp - int(services_last_timestamp[service]) >= 2:
@@ -98,10 +104,14 @@ def main():
                 time.sleep(1)
 
     def stop_callback_check_services_down():
+        global thread_kill
+        thread_kill = True
+
         for thread in threading.enumerate():
             if thread.name == "check_service_down":
-                thread.raise_exception()
                 thread.join()
+
+        thread_kill = False
 
     def create_callback_check_services_down(services):
         for service in services:
