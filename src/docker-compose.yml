@@ -79,6 +79,8 @@ services:
             context: .
             dockerfile: ./Dockerfile
         container_name: consumer
+        networks:
+            - elk
         depends_on:
             # else it will consume before elasticsearch is up and wont be able to send data
             - elasticsearch
