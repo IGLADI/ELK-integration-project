@@ -2,9 +2,7 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY ./consumer.py ./consumer.py
-COPY ./requirements.txt ./requirements.txt
-COPY ./.env ./.env
+COPY . .
 
 RUN pip install -r ./requirements.txt
 

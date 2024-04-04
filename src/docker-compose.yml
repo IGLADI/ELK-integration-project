@@ -76,7 +76,7 @@ services:
 
     consumer:
         build:
-            context: .
+            context: ./consumer
             dockerfile: ./Dockerfile
         container_name: consumer
         networks:

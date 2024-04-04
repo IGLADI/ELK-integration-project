@@ -1,11 +1,12 @@
-import os
-import xml.etree.ElementTree as ET
-from elasticsearch import Elasticsearch
-import time
 import json
+import os
+import threading
+import time
+import xml.etree.ElementTree as ET
 
 import dotenv
 import pika
+from elasticsearch import Elasticsearch
 
 
 def main():
@@ -27,11 +28,25 @@ def main():
     print(f"Username: {elastic_username}")
     print(f"Password: {elastic_password}")
 
+    # services to monitor
+    services = []
+    services_last_timestamp = {}
+
+    def update_services():
+        print("Updating services:")
+        with open(file="heartbeat_rabbitmq.csv", mode="r") as csv:
+            for line in csv:
+                services.append(line.strip().split(","))
+                print(services[-1])
+        # update every 5s
+        time.sleep(5)
+
+    threading.Thread(target=update_services, daemon=True).start()
+
     # connect to rabbitmq
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
-
     channel.queue_declare(queue=queue)
 
     # connect to elasticsearch
@@ -41,7 +56,11 @@ def main():
         time.sleep(1)
     print("Connected to Elasticsearch")
 
-    es.indices.create(index="heartbeat-rabbitmq", ignore=400)
+    # create index if it doesn't exist
+    try:
+        es.indices.create(index="heartbeat-rabbitmq", ignore=400)
+    except Exception as e:
+        print(f"Error creating index: {e}")
     print("Index created")
 
     # pylance lies, callbacks call 4 args
