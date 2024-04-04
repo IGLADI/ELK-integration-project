@@ -43,15 +43,15 @@ def main():
 
     threading.Thread(target=update_services, daemon=True).start()
 
-    # connect to rabbitmq
+    print("Connecting to RabbitMQ")
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue=queue)
 
-    # connect to elasticsearch
+    print("Connecting to Elasticsearch")
     es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
-    # wait for elasticsearch api to be up
+    print("Waiting for Elasticsearch API to be up")
     while not es.ping():
         time.sleep(1)
     print("Connected to Elasticsearch")

@@ -79,6 +79,7 @@ services:
             context: ./consumer
             dockerfile: ./Dockerfile
         container_name: consumer
+        env_file: ./.env
         networks:
             - elk
         depends_on:
