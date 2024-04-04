@@ -40,9 +40,7 @@ def main():
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
-        print("=====================================")
-        print("Received message:")
-        print(message)
+        print(f"=====================================\nReceived message:{message}")
 
         # parse xml
         try:
@@ -109,28 +107,30 @@ def main():
         for service in services:
             threading.Thread(target=check_service_down, name="check_service_down", args=(service[0],), daemon=True).start()
 
-    def update_services(services):
-        global services_last_timestamp
+    def update_services():
+        while True:
+            global services_last_timestamp
+            global services
 
-        print("Updating services:")
-        with open(file="/heartbeat_rabbitmq.csv", mode="r") as csv:
-            for line in csv:
-                service_line = line.strip().split(",")
-                for service in service_line:
-                    services.append((service, int(time.time())))
+            print("Updating services...")
+            services = []
+            with open(file="/heartbeat_rabbitmq.csv", mode="r") as csv:
+                for line in csv:
+                    service_line = line.strip().split(",")
+                    for service in service_line:
+                        services.append((service, int(time.time())))
 
-        print("Services updated")
-        print(f"Services found: {services}")
+            print(f"Services updated\nServices found: {services}")
 
-        stop_callback_check_services_down()
+            stop_callback_check_services_down()
 
-        current_timestamp = int(time.time())
-        services_last_timestamp = {service[0]: current_timestamp for service in services}
+            current_timestamp = int(time.time())
+            services_last_timestamp = {service[0]: current_timestamp for service in services}
 
-        create_callback_check_services_down(services)
+            create_callback_check_services_down(services)
 
-        # update every 5s
-        time.sleep(5)
+            # update every 5s
+            time.sleep(5)
 
     print("Connecting to RabbitMQ")
     credentials = pika.PlainCredentials(username, password)
@@ -148,12 +148,12 @@ def main():
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
+        print("Index created")
     except Exception as e:
         print(f"Error creating index: {e}")
-    print("Index created")
 
     print("Starting services update thread")
-    threading.Thread(target=update_services, args=(services,), daemon=True).start()
+    threading.Thread(target=update_services, daemon=True).start()
 
     channel.basic_consume(queue=queue, on_message_callback=heartbeat_callback, auto_ack=True)
     print("Waiting for msgs.")
