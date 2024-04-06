@@ -82,7 +82,7 @@ def main():
         while True:
             if thread_kill:
                 break
-            
+
             current_timestamp = int(time.time())
             # this means we haven't received a heartbeat in 2s since the last one was sent
             if current_timestamp - int(services_last_timestamp[service]) >= 2:
@@ -124,7 +124,7 @@ def main():
 
             print("Updating services...")
             services = []
-            with open(file="/heartbeat_rabbitmq.csv", mode="r") as csv:
+            with open(file="./heartbeat_rabbitmq.csv", mode="r") as csv:
                 for line in csv:
                     service_line = line.strip().split(",")
                     for service in service_line:
