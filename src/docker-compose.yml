@@ -81,7 +81,7 @@ services:
         container_name: consumer
         env_file: ../.env
         volumes:
-            - ./consumer/heartbeat_rabbitmq.csv:./heartbeat_rabbitmq.csv
+            - ./consumer/heartbeat_rabbitmq.csv:/app/heartbeat_rabbitmq.csv
         networks:
             - elk
         depends_on:
