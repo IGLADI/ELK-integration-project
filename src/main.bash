@@ -39,7 +39,7 @@ if [[ "${1,,}" == "setup" ]]; then
 
     echo "What is your rabbitmq host?"
     read RABBITMQ_HOST
-    echo "RABBITMQ_HOST='$RABBITMQ_PASSWORD'" >>.env
+    echo "RABBITMQ_HOST='$RABBITMQ_HOST'" >>.env
 
     echo "What is your rabbitmq virtual host?"
     read RABBITMQ_VIRTUAL_HOST
