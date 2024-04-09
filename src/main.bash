@@ -49,6 +49,10 @@ if [[ "${1,,}" == "setup" ]]; then
     read RABBITMQ_QUEUE
     echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
 
+    # somtimes buggy when we don't start it before
+    docker compose up -d
+
+    # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate
 else
     echo "Starting as normal"
