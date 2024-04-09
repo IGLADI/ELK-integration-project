@@ -61,4 +61,5 @@ fi
 docker compose up -d
 
 echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
+echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
 echo "Go check out the readme for future steps and setup your first services to monitor"
