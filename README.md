@@ -11,7 +11,29 @@
 -   RabbitMQ (WIP)
 -   Bash/Shell scripting
 
-## Setup
+## Disclaimer
+
+To run our project, we're making the assumption your on linux and have docker installed. If you're on windows, you can use wsl.
+
+## TL;DR
+
+### Script
+
+If you've already set everything up and you're just trying to run, execute the following command:
+
+```bash
+bash ./src/main.bash
+```
+
+To run and setup for the first time, run the following command:
+
+```bash
+bash ./src/main.bash setup
+```
+
+And follow the instructions.
+
+### Manual installation
 
 Go into the `./src` folder:
 

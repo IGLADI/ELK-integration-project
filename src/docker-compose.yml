@@ -79,7 +79,7 @@ services:
             context: ./consumer
             dockerfile: ./Dockerfile
         container_name: consumer
-        env_file: ../.env
+        env_file: ./.env
         volumes:
             - ./consumer/heartbeat_rabbitmq.csv:/app/heartbeat_rabbitmq.csv
         networks:

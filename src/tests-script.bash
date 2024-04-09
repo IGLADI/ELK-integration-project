@@ -4,7 +4,7 @@ sudo apt install docker-compose -y
 # check the docker-compose config
 docker-compose config --quiet && docker_compose="Docker-compose OK" || docker_compose="Docker-compose ERROR"
 
-# shut down active container & start new one 
+# shut down active container & start new one
 sudo docker compose up -d
 
 # get the container id
