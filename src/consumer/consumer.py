@@ -142,7 +142,13 @@ def main():
             # update every 5s
             time.sleep(5)
 
-    print("Connecting to RabbitMQ")
+    print("Connecting to RabbitMQ with the following credentials:")
+    print(f"Username: {username}")
+    print(f"Password: {password}")
+    print(f"Host: {host}")
+    print(f"Virtual Host: {virtual_host}")
+    print(f"Queue: {queue}")
+    print("=====================================")
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
