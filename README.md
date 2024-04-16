@@ -23,6 +23,10 @@ Before running the script, make sure you have a RabbitMQ instance running. If th
 
 ```bash
 docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+To run and setup for the first time, run the following command:
+
+```bash
+bash ./src/main.bash setup
 ```
 
 If you've already set everything up and you're just trying to run, execute the following command:
@@ -31,10 +35,10 @@ If you've already set everything up and you're just trying to run, execute the f
 bash ./src/main.bash
 ```
 
-To run and setup for the first time, run the following command:
+To stop the service, run the following command:
 
 ```bash
-bash ./src/main.bash setup
+bash ./src/main.bash stop
 ```
 
 And follow the instructions.
