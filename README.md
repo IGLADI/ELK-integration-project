@@ -261,11 +261,16 @@ exit
 
 ## Used ports (assigned range:16000-23999)
 
+-   5672 (rabbitmq api)
+-   15672 (rabbitmq frontend)
+-   16000 (portainer, this would typically be 8000)
 -   16601 (kibana, this would typically be 5601)
 -   19200 (elasticsearch API, this would typically be 9200)
 -   19300 (elasticsearch binary protocol, this would typically be 9300)
--   16000 (portainer, this would typically be 8000)
 -   17443 (portainer https frontend, this would typically be 9443)
+
+**Note**
+Rabbitmq doesn't follow the assigned ranges as it's for the general group (can be run from outside) and people were already publishing to those ports.
 
 ## Used/interesting resources
 
