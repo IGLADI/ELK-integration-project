@@ -212,6 +212,8 @@ exit
 -   16601 (kibana, this would typically be 5601)
 -   19200 (elasticsearch API, this would typically be 9200)
 -   19300 (elasticsearch binary protocol, this would typically be 9300)
+-   16000 (portainer, this would typically be 8000)
+-   17443 (portainer https frontend, this would typically be 9443)
 
 ## Used/interesting resources
 
