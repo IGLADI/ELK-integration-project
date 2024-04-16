@@ -8,10 +8,10 @@ chmod -R go-w ./ELK/heartbeat/services/
 chmod -R 777 ./ELK/elasticsearch/data/
 
 cd src
-echo "$PWD"
 
-# just to tell  the user in what mode the script is running
+# not case senitive
 if [[ "${1,,}" == "setup" ]]; then
+    # just to tell  the user in what mode the script is running
     echo "Setting up for the first time"
 
     echo "What version of elasticsearch do you want to use? (current latest is 8.12.2)"
@@ -54,12 +54,35 @@ if [[ "${1,,}" == "setup" ]]; then
 
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate
-else
-    echo "Starting as normal"
+
+    $start = true
 fi
 
-docker compose up -d
+# if no args
+if [ $# -eq 0 ]; then
+    echo "Starting as normal"
+    $start = true
+fi
 
-echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
-echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
-echo "Go check out the readme for future steps and setup your first services to monitor"
+if [ $start ]; then
+    docker compose up -d
+
+    echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
+    echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
+    echo "Go check out the readme for future steps and setup your first services to monitor"
+fi
+
+if [[ "${1,,}" == "stop" ]]; then
+    docker compose down
+    # clear the src-consumer container image so it will be updated if changed on next up
+    docker image rm src-consumer:latest --force
+fi
+
+if [[ "${1,,}" == "--help" ]]; then
+    echo "Usage: ./main.bash [option]"
+    echo "Options:"
+    echo "  setup: setup the environment for the first time"
+    echo "  leave blank: start the environment"
+    echo "  stop: stop the environment"
+    echo "  --help: show this message"
+fi

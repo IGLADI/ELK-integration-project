@@ -19,16 +19,22 @@ To run our project, we're making the assumption your on linux and have docker in
 
 ### Script
 
+To run and setup for the first time, run the following command:
+
+```bash
+bash ./src/main.bash setup
+```
+
 If you've already set everything up and you're just trying to run, execute the following command:
 
 ```bash
 bash ./src/main.bash
 ```
 
-To run and setup for the first time, run the following command:
+To stop the service, run the following command:
 
 ```bash
-bash ./src/main.bash setup
+bash ./src/main.bash stop
 ```
 
 And follow the instructions.
