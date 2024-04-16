@@ -23,6 +23,8 @@ Before running the script, make sure you have a RabbitMQ instance running. If th
 
 ```bash
 docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+```
+
 To run and setup for the first time, run the following command:
 
 ```bash
