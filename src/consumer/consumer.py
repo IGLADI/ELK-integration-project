@@ -84,8 +84,8 @@ def main():
                 break
 
             current_timestamp = int(time.time())
-            # this means we haven't received a heartbeat in 2s since the last one was sent
-            if current_timestamp - int(services_last_timestamp[service]) >= 2:
+            # this means we haven't received a heartbeat in 7s since the last one was sent
+            if current_timestamp - int(services_last_timestamp[service]) >= 7:
                 heartbeat_callback(
                     None,
                     None,
@@ -142,7 +142,13 @@ def main():
             # update every 5s
             time.sleep(5)
 
-    print("Connecting to RabbitMQ")
+    print("Connecting to RabbitMQ with the following credentials:")
+    print(f"Username: {username}")
+    print(f"Password: {password}")
+    print(f"Host: {host}")
+    print(f"Virtual Host: {virtual_host}")
+    print(f"Queue: {queue}")
+    print("=====================================")
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
