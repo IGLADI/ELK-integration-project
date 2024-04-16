@@ -37,14 +37,6 @@ To setup the service for the first time, run the following command:
 bash ./src/main.bash setup
 ```
 
-And follow the instructions.
-
-Once you have completed the setup you will be able to access the dashboard via <http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))>
-
-After clicking the link, enter your login credentials and you'll be redirected to the monitoring dashboard. The default username is `elastic` (will be modifiable in .env), and the password is what you've entered in the `KIBANA_SYSTEM_PASSWORD` variable in your `./src/.env` file.
-
-**Note** replace localhost with your local IP.
-
 To stop the service, run the following command:
 
 ```bash
