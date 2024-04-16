@@ -9,3 +9,5 @@ services:
         volumes:
             - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
             - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+        # no env vars: guest guest as its locally, we recommend to change this if exposed
+        restart: always
