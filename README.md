@@ -19,6 +19,12 @@ To run our project, we're making the assumption your on linux and have docker in
 
 ### Script
 
+Before running the script, make sure you have a RabbitMQ instance running. If this isn't running yet, you can run:
+
+```bash
+docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+```
+
 If you've already set everything up and you're just trying to run, execute the following command:
 
 ```bash
@@ -40,6 +46,12 @@ After clicking the link, enter your login credentials and you'll be redirected t
 **Note** replace localhost with your local IP.
 
 ### Manual installation
+
+Before running the script, make sure you have a RabbitMQ instance running. If this isn't running yet, you can run:
+
+```bash
+docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+```
 
 Go into the `./src` folder:
 
