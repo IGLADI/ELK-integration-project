@@ -25,24 +25,27 @@ Before running the script, make sure you have a RabbitMQ instance running. If th
 docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
 ```
 
-To run and setup for the first time, run the following command:
+Before running any of the next commands, please make sure you're in the `src` folder with the following command:
 
 ```bash
 cd src
+```
+
+To run and setup for the first time, run the following command:
+
+```bash
 bash ./main.bash setup
 ```
 
 If you've already set everything up and you're just trying to run, execute the following command:
 
 ```bash
-cd src
 bash ./main.bash
 ```
 
 To stop the service, run the following command:
 
 ```bash
-cd src
 bash ./main.bash stop
 ```
 
