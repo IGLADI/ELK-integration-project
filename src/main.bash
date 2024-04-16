@@ -55,13 +55,13 @@ if [[ "${1,,}" == "setup" ]]; then
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate
 
-    start = true
+    start=true
 fi
 
 # if no args
 if [ $# -eq 0 ]; then
     echo "Starting as normal"
-    start = true
+    start=true
 fi
 
 if [ $start ]; then
