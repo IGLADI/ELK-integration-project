@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+    rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+            - "5672:5672" # RabbitMQ api port
+            - "15672:15672" # web ui
+        volumes:
+            - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+            - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+        # no env vars: guest guest as its locally, we recommend to change this if exposed
+        restart: always

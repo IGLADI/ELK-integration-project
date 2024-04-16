@@ -8,7 +8,7 @@
 -   ELK (elasticsearch, logstash, kibana)
 -   Heartbeat (http monitoring for redundancy + may help with debugging)
 -   Python
--   RabbitMQ (WIP)
+-   RabbitMQ
 -   Bash/Shell scripting
 
 ## Disclaimer
@@ -18,6 +18,12 @@ To run our project, we're making the assumption your on linux and have docker in
 ## TL;DR
 
 ### Script
+
+Before running the script, make sure you have a RabbitMQ instance running. If this isn't running yet, you can run:
+
+```bash
+docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+```
 
 To run and setup for the first time, run the following command:
 
@@ -46,6 +52,12 @@ After clicking the link, enter your login credentials and you'll be redirected t
 **Note** replace localhost with your local IP.
 
 ### Manual installation
+
+Before running the script, make sure you have a RabbitMQ instance running. If this isn't running yet, you can run:
+
+```bash
+docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+```
 
 Go into the `./src` folder:
 
