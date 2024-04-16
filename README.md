@@ -126,8 +126,10 @@ If you're using a reverse proxy, keep in mind it should still be on the same net
 
 Whilst the service is starting up, you may have issues whilst loading the web interface, with random issues popping up that aren't related to what you're doing. To counter this, wait about a minute, then refresh your page.
 
-**Note** You may also want to check [tests][README.md#Tests], or check the container logs with `docker logs <container_id>`.
-**Note** If you wish to access more website tips, please click [here](website_utils.md).
+**Note**
+
+-   You may also want to check [tests][README.md#Tests], or check the container logs with `docker logs <container_id>`.
+-   If you wish to access more website tips, please click [here](website_utils.md).
 
 ## Tests
 

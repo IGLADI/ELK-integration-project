@@ -84,8 +84,8 @@ def main():
                 break
 
             current_timestamp = int(time.time())
-            # this means we haven't received a heartbeat in 2s since the last one was sent
-            if current_timestamp - int(services_last_timestamp[service]) >= 2:
+            # this means we haven't received a heartbeat in 7s since the last one was sent
+            if current_timestamp - int(services_last_timestamp[service]) >= 7:
                 heartbeat_callback(
                     None,
                     None,
