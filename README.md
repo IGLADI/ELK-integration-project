@@ -73,6 +73,12 @@ After clicking the link, enter your login credentials and you'll be redirected t
 
 **Note** replace localhost with your local IP.
 
+If you wish to stop the service, run the following command:
+
+```bash
+docker compose down
+```
+
 ## Adding services to monitor
 
 ### Heartbeat monitoring
@@ -102,6 +108,28 @@ mv ./service.yml.unconfirmed ./service.yml
 -   We check for new yml files every 5s, consider it may take up to 10s (with both the dashboard and the service set to reload every second) before showing up.
 -   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
 -   If you temporarely don't want to monitor a service you can set `enabled: false` in the yml file.
+
+#### Heartbeat configuration
+
+We expect the services to monitor to push the following XML fot to the queue:
+
+```xml
+<xs:complexType name="heartbeat">
+    <xs:all>
+      <xs:element name="service" type="service"/>
+      <xs:element name="timestamp" type="xs:dateTime"/>
+      <xs:element name="status" type="xs:positiveInteger"/>
+      <xs:element name="error" type="xs:token"/>
+      <xs:element name="extra" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:positiveInteger" name="user-count" />
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+</xs:complexType>
+```
 
 ## Troubleshooting
 
