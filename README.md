@@ -8,7 +8,7 @@
 -   ELK (elasticsearch, logstash, kibana)
 -   Heartbeat (http monitoring for redundancy + may help with debugging)
 -   Python
--   RabbitMQ (WIP)
+-   RabbitMQ
 -   Bash/Shell scripting
 
 ## Disclaimer
