@@ -34,19 +34,19 @@ cd src
 To setup the service for the first time, run the following command:
 
 ```bash
-bash ./main.bash setup
+sudo bash ./main.bash setup
 ```
 
 To stop the service, run the following command:
 
 ```bash
-bash ./main.bash stop
+sudo bash ./main.bash stop
 ```
 
 Before running any of the next commands, please make sure you're in the `src` folder with the following command:
 
 ```bash
-bash ./main.bash
+sudo bash ./main.bash
 ```
 
 ### Manual installation

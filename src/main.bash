@@ -1,3 +1,9 @@
+# run this script as root
+if [ $(/usr/bin/id -u) -ne 0 ]; then
+    echo "This script must be run as root"
+    exit
+fi
+
 # go into the root directory of the project
 cd ..
 
