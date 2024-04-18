@@ -122,6 +122,7 @@ mv ./service.yml.unconfirmed ./service.yml
 **Notes**
 
 -   We check for new yml files every 5s, consider it may take up to 10s (with both the dashboard and the service set to reload every second) before showing up.
+-   We also update the consumer with the csv file every minute, so it may take up to 1.5 minutes before the service is fully operational.
 -   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
 -   If you temporarely don't want to monitor a service you can set `enabled: false` in the yml file.
 

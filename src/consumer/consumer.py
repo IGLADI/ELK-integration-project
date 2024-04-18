@@ -139,8 +139,8 @@ def main():
 
             create_callback_check_services_down(services)
 
-            # update every 5s
-            time.sleep(5)
+            # update every minute
+            time.sleep(60)
 
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
