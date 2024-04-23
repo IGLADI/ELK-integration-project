@@ -1,0 +1,19 @@
+name: Docker Image CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Docker Compose
+      run: sudo apt update && sudo apt install docker-compose -y
+    - name: Run test script
+      run: bash ./src/tests-script.bash
+    # - name: Build the Docker image
+    #   run: docker build . --file Dockerfile --tag ELK:$(date +%s)

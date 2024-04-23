@@ -7,10 +7,10 @@ fi
 cd ..
 
 # chmod just in case
-chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
-chmod -R go-w ./ELK/heartbeat/services/
-chmod -R 777 ./ELK/elasticsearch/data/
+sudo chmod +rwx ./src/setup/entrypoint.sh
+sudo chmod go-w ./ELK/heartbeat/heartbeat.yml
+sudo chmod -R go-w ./ELK/heartbeat/services/
+sudo chmod -R 777 ./ELK/elasticsearch/data/
 
 cd src
 
@@ -114,7 +114,7 @@ if [ $# -eq 0 ]; then
     start=true
 fi
 
-if [ $start ]; then
+if [ $start == true ]; then
     docker compose up -d
 
     echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
