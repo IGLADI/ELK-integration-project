@@ -7,10 +7,12 @@ fi
 cd ..
 
 # chmod just in case
-sudo chmod +rwx ./src/setup/entrypoint.sh
-sudo chmod go-w ./ELK/heartbeat/heartbeat.yml
-sudo chmod -R go-w ./ELK/heartbeat/services/
-sudo chmod -R 777 ./ELK/elasticsearch/data/
+chmod -R go-w ./ELK/heartbeat/services/
+chmod -R 777 ./ELK/elasticsearch/data/
+chmod +rwx ./src/setup/entrypoint.sh
+chmod go-w ./ELK/heartbeat/heartbeat.yml
+# change the owner to root
+sudo chown 1000:1000 ./ELK/heartbeat/heartbeat.yml
 
 cd src
 
@@ -91,7 +93,7 @@ if [[ "${1,,}" == "setup" ]]; then
     docker compose up -d
 
     # force recreate just in case the network is bugged (due to a previous version)
-    docker compose up setup --force-recreate
+    docker compose up setup --force-recreate -d
 
     # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
     echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
@@ -122,7 +124,7 @@ if [ $start == true ]; then
     echo "Go check out the readme for future steps and setup your first services to monitor"
 fi
 
-if [[ "${1,,}" == "stop" ]]; then
+if [[ "${1,,}" == "stop" || "${1,,}" == "down" ]]; then
     docker compose down
     # clear the src-consumer container image so it will be updated if changed on next up
     docker image rm src-consumer:latest --force
