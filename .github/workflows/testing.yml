@@ -1,19 +1,22 @@
-name: Docker Image CI
+name: Test Cases (CI)
 
 on:
-  push:
-  pull_request:
+    push:
+    pull_request:
 
 jobs:
-  build:
+    build:
+        runs-on: ubuntu-latest
 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install Docker Compose
-      run: sudo apt update && sudo apt install docker-compose -y
-    - name: Run test script
-      run: bash ./src/tests-script.bash
-    # - name: Build the Docker image
-    #   run: docker build . --file Dockerfile --tag ELK:$(date +%s)
+        steps:
+            - uses: actions/checkout@v3
+            # install docker compose for yml validation, not needed anymore as it should be inside the test script
+            # - name: Install Docker Compose
+            #   run: sudo apt update && sudo apt install docker-compose -y
+            # this is needed else src-consumer will not be able to connect to rabbitmq => infinitly restart
+            - name: Start RabbitMQ
+              run: docker-compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+            - name: Run test script
+              run: sudo bash ./src/tests-script.bash
+        # - name: Build the Docker image
+        #   run: docker build . --file Dockerfile --tag ELK:$(date +%s)
