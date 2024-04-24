@@ -89,9 +89,6 @@ if [[ "${1,,}" == "setup" ]]; then
         echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
     fi
 
-    # somtimes buggy when we don't start it before
-    docker compose up -d
-
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate -d
 
@@ -108,10 +105,12 @@ if [[ "${1,,}" == "setup" ]]; then
     echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
 
     start=true
+
+    echo "If this is the first time you are setting up the environment, please set it down and up again to make sure everything is working"
 fi
 
 # if no args
-if [ $# -eq 0 ]; then
+if [ -z "$1" ]; then
     echo "Starting as normal"
     start=true
 fi
