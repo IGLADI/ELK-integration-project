@@ -3,10 +3,28 @@ import os
 import threading
 import time
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 import dotenv
 import pika
 from elasticsearch import Elasticsearch
+
+
+def is_timestamp(input_str):
+    try:
+        datetime.fromtimestamp(float(input_str))
+        return True
+    except ValueError:
+        return False
+
+
+def convert_to_iso_timestamp(input_str):
+    if is_timestamp(input_str):
+        timestamp = float(input_str)
+        dt_object = datetime.utcfromtimestamp(timestamp)
+        return dt_object.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    else:
+        return "Not a valid timestamp"
 
 
 def main():
@@ -61,6 +79,14 @@ def main():
                     json_data[child.tag] = child.text
                 else:
                     json_data[child.tag] = "None"
+
+            # # convert timestamp to iso format
+            # we now use a unix/epoch in kibana, kept in case
+            # if is_timestamp(json_data["timestamp"]):
+            #     json_data["timestamp"] = convert_to_iso_timestamp(json_data["timestamp"])
+            #     print("converted timestamp:" + json_data["timestamp"])
+            # else:
+            #     print("\33[31mNot a valid timestamp or timestamp not in unix or no timestamp\33[0m")
 
             json_message = json.dumps(json_data)
             print("JSON message:")
