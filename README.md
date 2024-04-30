@@ -128,7 +128,7 @@ mv ./service.yml.unconfirmed ./service.yml
 
 #### Heartbeat configuration
 
-We expect the services to monitor to push the following [XML format](https://one-atlas-cred.atlassian.net/wiki/spaces/EHB1/pages/20643886/XML+XSD#heartbeat):
+We expect the services to monitor to push the following [XSD format](./template.xsd) to the queue
 
 ## Troubleshooting
 

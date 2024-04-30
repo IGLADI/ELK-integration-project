@@ -1,0 +1,16 @@
+
+<xs:complexType name="heartbeat">
+    <xs:all>
+      <xs:element name="service" type="service"/>
+      <xs:element name="timestamp" type="xs:dateTime"/>
+      <xs:element name="status" type="xs:positiveInteger"/>
+      <xs:element name="error" type="xs:token"/>
+      <xs:element name="extra" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:positiveInteger" name="user-count" />
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+</xs:complexType>
