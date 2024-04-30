@@ -128,25 +128,7 @@ mv ./service.yml.unconfirmed ./service.yml
 
 #### Heartbeat configuration
 
-We expect the services to monitor to push the following XML fot to the queue:
-
-```xml
-<xs:complexType name="heartbeat">
-    <xs:all>
-      <xs:element name="service" type="service"/>
-      <xs:element name="timestamp" type="xs:dateTime"/>
-      <xs:element name="status" type="xs:positiveInteger"/>
-      <xs:element name="error" type="xs:token"/>
-      <xs:element name="extra" minOccurs="0">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:positiveInteger" name="user-count" />
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
-    </xs:all>
-</xs:complexType>
-```
+We expect the services to monitor to push the following [XML format](https://one-atlas-cred.atlassian.net/wiki/spaces/EHB1/pages/20643886/XML+XSD#heartbeat):
 
 ## Troubleshooting
 
