@@ -1,4 +1,3 @@
-
 <xs:complexType name="heartbeat">
     <xs:all>
       <xs:element name="service" type="service"/>
