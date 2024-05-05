@@ -1,3 +1,5 @@
+#!/bin/bash
+
 returnvalue=0
 
 cd src || echo "already in src"
