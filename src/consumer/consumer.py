@@ -111,15 +111,16 @@ def main():
                 break
 
             current_timestamp = int(time.time())
-            # this means we haven't received a heartbeat in 7s since the last one was sent
-            if current_timestamp - int(services_last_timestamp[service]) >= 7:
+            # this means we haven't received a heartbeat in 8s since the last one was sent
+            # -3s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
+            if current_timestamp - int(services_last_timestamp[service]) >= 8:
                 heartbeat_callback(
                     None,
                     None,
                     None,
                     f"""<heartbeat>
                     <service>{service}</service>
-                    <timestamp>{current_timestamp}</timestamp>
+                    <timestamp>{current_timestamp-3}</timestamp>
                     <error>503</error>
                     <status>down</status>
                     <extra><message>Didn't received heartbeat in 2s</message></extra>
