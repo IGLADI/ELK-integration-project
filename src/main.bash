@@ -27,6 +27,7 @@ RABBITMQ_PASSWORD=$6
 RABBITMQ_HOST=$7
 RABBITMQ_VIRTUAL_HOST=$8
 RABBITMQ_QUEUE=$9
+RABBITMQ_EXCHANGE=${10}
 
 # not case senitive
 if [[ "${1,,}" == "setup" ]]; then
@@ -89,6 +90,13 @@ if [[ "${1,,}" == "setup" ]]; then
         echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
     fi
 
+    if [ -z "$RABBITMQ_EXCHANGE" ]; then
+        echo "What is your rabbitmq exchange where the heartbeats will be published?"
+        read RABBITMQ_EXCHANGE
+    else
+        echo "found RABBITMQ_EXCHANGE=$RABBITMQ_EXCHANGE"
+    fi
+
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate -d
 
@@ -103,6 +111,7 @@ if [[ "${1,,}" == "setup" ]]; then
     echo "RABBITMQ_HOST='$RABBITMQ_HOST'" >>.env
     echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
     echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
+    echo "RABBITMQ_EXCHANGE='$RABBITMQ_EXCHANGE'" >>.env
 
     start=true
 
@@ -137,5 +146,5 @@ if [[ "${1,,}" == "--help" ]]; then
     echo "  stop: stop the environment"
     echo "  --help: show this message"
     echo "  instead of relying on the questions you can pass the following arguments:"
-    echo "  ./main.bash setup <ELASTIC_VERSION> <ELASTIC_PASSWORD> <KIBANA_SYSTEM_PASSWORD> <RABBITMQ_USERNAME> <RABBITMQ_PASSWORD> <RABBITMQ_HOST> <RABBITMQ_VIRTUAL_HOST> <RABBITMQ_QUEUE>"
+    echo "  ./main.bash setup <ELASTIC_VERSION> <ELASTIC_PASSWORD> <KIBANA_SYSTEM_PASSWORD> <RABBITMQ_USERNAME> <RABBITMQ_PASSWORD> <RABBITMQ_HOST> <RABBITMQ_VIRTUAL_HOST> <RABBITMQ_QUEUE> <RABBITMQ_EXCHANGE>"
 fi

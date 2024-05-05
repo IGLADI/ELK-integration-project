@@ -35,6 +35,7 @@ def main():
     host = os.getenv("RABBITMQ_HOST")
     virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
     queue = os.getenv("RABBITMQ_QUEUE")
+    exchange = os.getenv("RABBITMQ_EXCHANGE")
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
     print(f"Password: {password}")
@@ -178,7 +179,9 @@ def main():
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
+    channel.exchange_declare(exchange=exchange, exchange_type="direct")
     channel.queue_declare(queue=queue)
+    channel.queue_bind(exchange=exchange, queue=queue, routing_key="heartbeat")
 
     print("Connecting to Elasticsearch")
     es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
