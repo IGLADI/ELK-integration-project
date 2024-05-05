@@ -1,4 +1,4 @@
-### Manual installation
+# Manual installation
 
 Before running the script, make sure you have a RabbitMQ instance running. If this isn't running yet, you can run the following command:
 
