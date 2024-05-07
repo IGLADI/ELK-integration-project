@@ -5,8 +5,7 @@
 ## Tech stack
 
 -   Docker
--   ELK
--   Heartbeat (http monitoring for redundancy + may help with debugging)
+-   ELK stack
 -   Python
 -   RabbitMQ
 -   Bash/Shell scripting
@@ -62,27 +61,18 @@ If you'd like to add a service to monitor, please follow these steps:
 Considering you're still in the `./src` folder, run:
 
 ```bash
-cd ../ELK/heartbeat/services
+cd ./consumer
 ```
 
-Create a `service.yml.unconfirmed` file based on the `template.yml.unconfirmed` file inside the `./ELK/heartbeat/services` folder with this command:
+After that, you'll be able to edit the csv with a list of service names you want to monitor.
 
 ```bash
-cp ./template.yml.unconfirmed ./service.yml.unconfirmed
-```
-
-Once filled in correctly, modify the name accordingly (modify `service` to the actual name of the service):
-
-```bash
-mv ./service.yml.unconfirmed ./service.yml
+nano ./heartbeat_rabbitmq.csv
 ```
 
 **Notes**
 
--   We check for new yaml files every 5 seconds, consider it may take up to 10 seconds (with both the dashboard and the service set to reload every second) before showing up.
--   We also update the consumer with the csv file every minute, so it may take up to 1.5 minutes before the service is fully operational.
--   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
--   If you temporarily don't want to monitor a service you can set `enabled: false` in the yaml file.
+-   We check for new csv file every x time, consider it may take up to 30 seconds (with both the dashboard and the service set to reload every second) before showing up.
 
 #### Heartbeat configuration
 
