@@ -5,13 +5,17 @@ if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
 fi
 
-# chmod just in case
-sudo chmod -R go-w ../ELK/heartbeat/services/
-sudo chmod -R 777 ../ELK/elasticsearch/data/
-sudo chmod +rwx ../src/setup/entrypoint.sh
-sudo chmod go-w ../ELK/heartbeat/heartbeat.yml
-# change the owner to root
-sudo chown 1000:1000 ../ELK/heartbeat/heartbeat.yml
+fix_permissions() {
+    # chmod just in case
+    sudo chmod -R go-w ../ELK/heartbeat/services/
+    # should be changed with untrusted users
+    sudo chmod -R 777 ../ELK/elasticsearch/data/
+    sudo chmod +rwx ../src/setup/entrypoint.sh
+    sudo chmod go-w ../ELK/heartbeat/heartbeat.yml
+    # change the owner to root
+    sudo chown 1000:1000 ../ELK/heartbeat/heartbeat.yml
+}
+fix_permissions
 
 # take all args and set them instead of the questions:
 ELASTIC_VERSION=$2
@@ -99,14 +103,13 @@ if [[ "${1,,}" == "setup" ]]; then
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate -d
     sleep 120s
+    fix_permissions
     docker compose up setup-export --force-recreate -d
 
     # 1 restart for sealf healing
     docker compose up -d && docker compose down && docker compose up -d
 
-    # should never be needed anymore
-    docker image rm setup && docker image rm setup-export
-    docker image rm src-setup && docker image rm src-setup-export
+    # we could remove setup containers & images but they use 0 resources
 fi
 
 # if no args

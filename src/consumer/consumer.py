@@ -187,13 +187,32 @@ def main():
     while not es.ping():
         time.sleep(2)
     print("Connected to Elasticsearch")
-
+    
+    index_settings = {
+        "properties": {
+            "timestamp": {"type": "date", "format": "epoch_second"},
+        }
+    }
+    
+    # # delete the index, needed when an old indice is existing with other settings
+    # try:
+    #     es.indices.delete(index="heartbeat-rabbitmq")
+    #     print("Index deleted")
+    # except Exception as e:
+    #     print(f"Error deleting index: {e}")
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
         print("Index created")
+        # edit the index so that the timestamp value is a real timestamp
+        try:
+            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
+            print("Index settings updated")
+        except Exception as e:
+            print(f"Error updating index settings: {e}")
     except Exception as e:
         print(f"Error creating index: {e}")
+    
 
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
