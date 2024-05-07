@@ -185,7 +185,7 @@ def main():
     es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
-        time.sleep(1)
+        time.sleep(2)
     print("Connected to Elasticsearch")
 
     # create index if it doesn't exist

@@ -7,6 +7,7 @@ version: "3.8"
 services:
     # setup script is a modified script from a github repo, check the link in the README.md, this prevents all the setup thing with
     setup:
+        container_name: setup
         profiles:
             - setup
         build:
@@ -88,6 +89,20 @@ services:
             # else it will consume before elasticsearch is up and wont be able to send data
             - elasticsearch
         restart: always
+
+    setup-export:
+        build:
+            context: ./setup
+            dockerfile: ./export.Dockerfile
+        container_name: setup-export
+        profiles:
+            - setup
+        init: true
+        env_file: ./.env
+        networks:
+            - elk
+        depends_on:
+            - kibana
 
     # not used rn
     # rabbitmq:

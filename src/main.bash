@@ -1,22 +1,17 @@
+#!/bin/bash
+
 # run this script as root
 if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
 fi
 
-# go into the root directory of the project
-cd ..
-
 # chmod just in case
-chmod -R go-w ./ELK/heartbeat/services/
-chmod -R 777 ./ELK/elasticsearch/data/
-chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
+sudo chmod -R go-w ../ELK/heartbeat/services/
+sudo chmod -R 777 ../ELK/elasticsearch/data/
+sudo chmod +rwx ../src/setup/entrypoint.sh
+sudo chmod go-w ../ELK/heartbeat/heartbeat.yml
 # change the owner to root
-sudo chown 1000:1000 ./ELK/heartbeat/heartbeat.yml
-
-cd src
-
-start=false
+sudo chown 1000:1000 ../ELK/heartbeat/heartbeat.yml
 
 # take all args and set them instead of the questions:
 ELASTIC_VERSION=$2
@@ -89,9 +84,6 @@ if [[ "${1,,}" == "setup" ]]; then
         echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
     fi
 
-    # force recreate just in case the network is bugged (due to a previous version)
-    docker compose up setup --force-recreate -d
-
     # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
     echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
     # for now you can't edit the admin username
@@ -104,18 +96,23 @@ if [[ "${1,,}" == "setup" ]]; then
     echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
     echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
 
-    start=true
+    # force recreate just in case the network is bugged (due to a previous version)
+    docker compose up setup --force-recreate -d
+    sleep 120s
+    docker compose up setup-export --force-recreate -d
 
-    echo "If this is the first time you are setting up the environment, please set it down and up again to make sure everything is working"
+    # 1 restart for sealf healing
+    docker compose up -d && docker compose down && docker compose up -d
+
+    # should never be needed anymore
+    docker image rm setup && docker image rm setup-export
+    docker image rm src-setup && docker image rm src-setup-export
 fi
 
 # if no args
 if [ -z "$1" ]; then
     echo "Starting as normal"
     start=true
-fi
-
-if [ $start == true ]; then
     docker compose up -d
 
     echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
