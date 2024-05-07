@@ -1,0 +1,3 @@
+[submodule "xmlxsd"]
+	path = xmlxsd
+	url = https://github.com/Integration-Project-Team-1/xmlxsd.git

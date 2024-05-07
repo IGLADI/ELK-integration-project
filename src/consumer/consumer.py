@@ -8,6 +8,7 @@ from datetime import datetime
 import dotenv
 import pika
 from elasticsearch import Elasticsearch
+from lxml import etree
 
 
 def is_timestamp(input_str):
@@ -58,9 +59,24 @@ def main():
     global services_last_timestamp
     services_last_timestamp = {}
 
+    def validate_xml(xml_file, xsd_file) -> bool:
+        xml_doc = etree.parse(xml_file)
+        xsd_doc = etree.parse(xsd_file)
+        xml_schema = etree.XMLschema(xsd_doc)
+        is_valid = xml_schema.validate(xml_doc)
+
+        if is_valid:
+            return True
+        else:
+            return False
+
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
+        if validate_xml(message, "../template.xsd"):
+            pass
+        else:
+            return False
         print(f"=====================================\nReceived message:{message}")
 
         # parse xml
@@ -143,7 +159,12 @@ def main():
 
     def create_callback_check_services_down(services):
         for service in services:
-            threading.Thread(target=check_service_down, name="check_service_down", args=(service[0],), daemon=True).start()
+            threading.Thread(
+                target=check_service_down,
+                name="check_service_down",
+                args=(service[0],),
+                daemon=True,
+            ).start()
 
     def update_services():
         while True:
@@ -163,7 +184,9 @@ def main():
             stop_callback_check_services_down()
 
             current_timestamp = int(time.time())
-            services_last_timestamp = {service[0]: current_timestamp for service in services}
+            services_last_timestamp = {
+                service[0]: current_timestamp for service in services
+            }
 
             create_callback_check_services_down(services)
 
@@ -178,14 +201,20 @@ def main():
     print(f"Queue: {queue}")
     print("=====================================")
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=host, virtual_host=virtual_host, credentials=credentials
+        )
+    )
     channel = connection.channel()
     channel.exchange_declare(exchange=exchange, exchange_type="direct")
     channel.queue_declare(queue=queue)
     channel.queue_bind(exchange=exchange, queue=queue, routing_key="heartbeat")
 
     print("Connecting to Elasticsearch")
-    es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
+    es = Elasticsearch(
+        ["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password)
+    )
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
         time.sleep(1)
@@ -201,7 +230,9 @@ def main():
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
 
-    channel.basic_consume(queue=queue, on_message_callback=heartbeat_callback, auto_ack=True)
+    channel.basic_consume(
+        queue=queue, on_message_callback=heartbeat_callback, auto_ack=True
+    )
     print("Waiting for msgs.")
     channel.start_consuming()
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:r="http://ehb.local"
+           targetNamespace="http://ehb.local">
+<xs:include schemaLocation="../xmlxsd/main.xsd"/>
+
+  <xs:element name="heartbeat" type="heartbeat">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="service" type="r:service"/>
+        <xs:element name="timestamp" type="xs:dateTime"/>
+        <xs:element name="status" type="r:nztoken"/>
+        <xs:element name="error" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
