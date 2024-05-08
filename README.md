@@ -91,7 +91,7 @@ chmod -R 777 ./ELK/elasticsearch/data/
 
 **Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
 
-## Restart from scratch
+### Restart from scratch
 
 If you wish to restart from scratch you can:
 
@@ -130,7 +130,7 @@ Whilst the service is starting up, you may have issues whilst loading the web in
 
 ## Tests
 
-### run all tests at once
+### Run all tests at once
 
 If you'd like to verify everything at once, there's a few steps to follow.
 
