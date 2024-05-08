@@ -132,8 +132,9 @@ def main():
                 break
 
             current_timestamp = int(time.time())
-            # this means we haven't received a heartbeat in 7s since the last one was sent
-            if current_timestamp - int(services_last_timestamp[service]) >= 7:
+            # this means we haven't received a heartbeat in 10s since the last one was sent
+            # -5s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
+            if current_timestamp - int(services_last_timestamp[service]) >= 10:
                 if not error_sent:
                     heartbeat_callback(
                         None,
@@ -141,7 +142,7 @@ def main():
                         None,
                         f"""<heartbeat>
                         <service>{service}</service>
-                        <timestamp>{current_timestamp}</timestamp>
+                        <timestamp>{current_timestamp-5}</timestamp>
                         <error>503</error>
                         <status>down</status>
                     </heartbeat>""".encode(
@@ -215,15 +216,36 @@ def main():
     es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
-        time.sleep(1)
+        time.sleep(2)
     print("Connected to Elasticsearch")
 
+    index_settings = {
+        "properties": {
+            "timestamp": {"type": "date", "format": "epoch_second"},
+        }
+    }
+
+    # # delete the index, needed when an old indice is existing with other settings
+    # try:
+    #     es.indices.delete(index="heartbeat-rabbitmq")
+    #     print("Index deleted")
+    # except Exception as e:
+    #     print(f"Error deleting index: {e}")
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
         print("Index created")
+        # edit the index so that the timestamp value is a real timestamp
+        try:
+            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
+            print("Index settings updated")
+        except Exception as e:
+            print(f"Error updating index settings: {e}")
     except Exception as e:
         print(f"Error creating index: {e}")
+
+    # consume all messages to clear the queue (avoid to get false stat when we are down/starting/...)
+    channel.queue_purge(queue)
 
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()

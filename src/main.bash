@@ -1,22 +1,24 @@
+#!/bin/bash
+
 # run this script as root
 if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
 fi
 
-# go into the root directory of the project
-cd ..
+cd src || echo "already in src"
 
-# chmod just in case
-chmod -R go-w ./ELK/heartbeat/services/
-chmod -R 777 ./ELK/elasticsearch/data/
-chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
-# change the owner to root
-sudo chown 1000:1000 ./ELK/heartbeat/heartbeat.yml
-
-cd src
-
-start=false
+fix_permissions() {
+    # chmod just in case
+    # should be changed with untrusted users
+    sudo chmod -R 777 ../ELK/elasticsearch/data/
+    sudo chmod +rwx ./setup/entrypoint.sh
+}
+fix_permissions
+finish() {
+    echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
+    echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
+    echo "Go check out the readme for future steps and setup your first services to monitor"
+}
 
 # take all args and set them instead of the questions:
 ELASTIC_VERSION=$2
@@ -89,9 +91,6 @@ if [[ "${1,,}" == "setup" ]]; then
         echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
     fi
 
-    # force recreate just in case the network is bugged (due to a previous version)
-    docker compose up setup --force-recreate -d
-
     # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
     echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
     # for now you can't edit the admin username
@@ -104,29 +103,38 @@ if [[ "${1,,}" == "setup" ]]; then
     echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
     echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
 
-    start=true
+    # force recreate just in case the network is bugged (due to a previous version)
+    docker compose up setup --force-recreate -d
+    # better if we way, more clean but can actually be skipped (will be slower as the rest will constantly restart withouth this sleep)
+    sleep 60s
+    fix_permissions
+    docker compose up setup-export --force-recreate -d
 
-    echo "If this is the first time you are setting up the environment, please set it down and up again to make sure everything is working"
+    # 1 restart for sealf healing
+    docker compose up -d && docker compose down && docker compose up -d
+
+    # we could remove setup containers & images but they use 0 resources, will be down on first down
+    finish
 fi
 
 # if no args
 if [ -z "$1" ]; then
     echo "Starting as normal"
-    start=true
-fi
-
-if [ $start == true ]; then
     docker compose up -d
 
-    echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
-    echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
-    echo "Go check out the readme for future steps and setup your first services to monitor"
+    finish
 fi
 
 if [[ "${1,,}" == "stop" || "${1,,}" == "down" ]]; then
     docker compose down
     # clear the src-consumer container image so it will be updated if changed on next up
     docker image rm src-consumer:latest --force
+
+    # remove setups if active
+    docker compose down setup setup-export | echo "no setup containers to stop:"
+    docker rmi src-setup src-setup-export | echo "no setup images to remove:"
+
+    echo "Stopped the environment"
 fi
 
 if [[ "${1,,}" == "--help" ]]; then
