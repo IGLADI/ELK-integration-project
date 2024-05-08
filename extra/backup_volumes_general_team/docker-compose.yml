@@ -1,0 +1,6 @@
+services:
+    backup:
+        image: jareware/docker-volume-backup
+        env_file: ./.env
+        volumes:
+            - /var/lib/docker/volumes:/backup/volumes:ro # mount all volumes to backup
