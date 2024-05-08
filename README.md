@@ -72,7 +72,7 @@ nano ./heartbeat_rabbitmq.csv
 
 **Notes**
 
--   We check for new csv file every x time, consider it may take up to 30 seconds (with both the dashboard and the service set to reload every second) before showing up.
+-   We check for new csv file every minute, consider it may take up to 30 seconds (with both the dashboard and the service set to reload every second) before showing up.
 
 #### Heartbeat configuration
 
