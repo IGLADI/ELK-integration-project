@@ -187,13 +187,13 @@ def main():
     while not es.ping():
         time.sleep(2)
     print("Connected to Elasticsearch")
-    
+
     index_settings = {
         "properties": {
             "timestamp": {"type": "date", "format": "epoch_second"},
         }
     }
-    
+
     # # delete the index, needed when an old indice is existing with other settings
     # try:
     #     es.indices.delete(index="heartbeat-rabbitmq")
@@ -212,7 +212,9 @@ def main():
             print(f"Error updating index settings: {e}")
     except Exception as e:
         print(f"Error creating index: {e}")
-    
+
+    # consume all messages to clear the queue (avoid to get false stat when we are down/starting/...)
+    channel.queue_purge(queue)
 
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
