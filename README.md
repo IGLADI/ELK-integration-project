@@ -144,44 +144,6 @@ Once docker-compose is installed, please run the following command. If the file 
 docker-compose config --quiet && printf "OK\n" || printf "ERROR\n"
 ```
 
-#### yaml validation
-
-First off, make sure the project is running. If it isn't running, please do so [here](README.md#Setup).
-
-Secondly, you'll need to enter the container. To do so, there's a few steps to follow.
-
-Get the required information of the container with the following command:
-
-```bash
-sudo docker container ls | grep heartbeat
-```
-
-Now, look for the container running heartbeat. Use the ID for the following command:
-
-```bash
-sudo docker exec -it <id> bash
-```
-
-Inside the container, you can validate the content of the yaml file with the commands written below.
-
-To validate the content of the yaml, enter the following command:
-
-```bash
-./heartbeat test config -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
-```
-
-If there are any errors and you'd like to see a more detailed explanation of what's good and wrong, use this command:
-
-```bash
-./heartbeat test output -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
-```
-
-Once finished, exit the container with the following command:
-
-```bash
-exit
-```
-
 ## Used ports (assigned range:16000-23999)
 
 -   5672 (RabbitMQ api)
