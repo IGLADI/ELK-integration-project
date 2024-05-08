@@ -56,6 +56,8 @@ def main():
     services = []
     global services_last_timestamp
     services_last_timestamp = {}
+    global error_sent
+    error_sent = False
 
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
@@ -98,13 +100,33 @@ def main():
         try:
             es.index(index="heartbeat-rabbitmq", body=json_message)
             services_last_timestamp[json_data["service"]] = json_data["timestamp"]
+            global error_sent
+            if error_sent:
+                send_error_email(json_data["service"], json_data["timestamp"], '503', 'up')
+                error_sent = False
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
+    
+    
+    def send_error_email(service, timestamp, error, status):
+        email_content = f"""<heartbeat xmlns:r="http://www.w3.org/2001/XMLSchema">
+        <service>{service}</service>
+        <timestamp>{timestamp}</timestamp>
+        <status>{status}</status>
+        <error>{error}</error>
+        </heartbeat>"""
+
+        try:
+            publish_to_rabbitmq(email_content)
+            print("Email content published to RabbitMQ successfully.")
+        except Exception as e:
+            print(f"Error publishing email content to RabbitMQ: {e}")
+
 
     def check_service_down(service):
         global services_last_timestamp
         global thread_kill
-
+        global error_sent
         while True:
             if thread_kill:
                 break
@@ -113,22 +135,31 @@ def main():
             # this means we haven't received a heartbeat in 10s since the last one was sent
             # -5s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
-                heartbeat_callback(
-                    None,
-                    None,
-                    None,
-                    f"""<heartbeat>
-                    <service>{service}</service>
-                    <timestamp>{current_timestamp-5}</timestamp>
-                    <error>503</error>
-                    <status>down</status>
-                    <extra><message>Didn't received heartbeat in 5s</message></extra>
-                </heartbeat>""".encode(
-                        "utf-8"
-                    ),
-                )
-                print(f"Didn't received heartbeat in 5s from {service}")
+                if not error_sent:
+                    heartbeat_callback(
+                        None,
+                        None,
+                        None,
+                        f"""<heartbeat>
+                        <service>{service}</service>
+                        <timestamp>{current_timestamp-5}</timestamp>
+                        <error>503</error>
+                        <status>down</status>
+                    </heartbeat>""".encode(
+                            "utf-8"
+                        ),
+                    )
+                print(f"Didn't received heartbeat in 2s from {service}")
+                send_error_email(service, current_timestamp,'503', 'down')
+                error_sent = True
                 time.sleep(1)
+
+    def publish_to_rabbitmq(channel, email_content):
+        channel.basic_publish(
+            exchange='amq.topic',
+            routing_key='service',
+            body=email_content
+        )
 
     def stop_callback_check_services_down():
         global thread_kill
