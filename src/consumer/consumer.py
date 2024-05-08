@@ -101,33 +101,20 @@ def main():
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
     
- 
+    
     def send_error_email(service, timestamp, error, status):
         email_content = f"""<heartbeat xmlns:r="http://www.w3.org/2001/XMLSchema">
         <service>{service}</service>
         <timestamp>{timestamp}</timestamp>
         <status>{status}</status>
-        <error>{error}</error>"""
+        <error>{error}</error>
+        </heartbeat>"""
 
         try:
             publish_to_rabbitmq(email_content)
-            print("Error email content published to RabbitMQ successfully.")
+            print("Email content published to RabbitMQ successfully.")
         except Exception as e:
-            print(f"Error publishing error email content to RabbitMQ: {e}")
-
-    def publish_to_rabbitmq(email_content):
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
-        channel = connection.channel()
-
-        channel.basic_publish(
-            exchange='amq.topic',
-            routing_key='service',
-            body=email_content
-        )
-
-        print("Email content published successfully.")
-
-        connection.close()
+            print(f"Error publishing email content to RabbitMQ: {e}")
 
 
     def check_service_down(service):
@@ -149,14 +136,20 @@ def main():
                     <timestamp>{current_timestamp}</timestamp>
                     <error>503</error>
                     <status>down</status>
-                    <extra><message>Didn't received heartbeat in 2s</message></extra>
                 </heartbeat>""".encode(
                         "utf-8"
                     ),
                 )
                 print(f"Didn't received heartbeat in 2s from {service}")
-                send_error_email(service, current_timestamp,'503', 'down',"Didn't receive heartbeat in 2s")
+                send_error_email(service, current_timestamp,'503', 'down')
                 time.sleep(1)
+
+    def publish_to_rabbitmq(channel, email_content):
+        channel.basic_publish(
+            exchange='amq.topic',
+            routing_key='service',
+            body=email_content
+        )
 
     def stop_callback_check_services_down():
         global thread_kill
