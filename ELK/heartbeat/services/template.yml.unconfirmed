@@ -1,9 +1,0 @@
-- type: http
-  enabled: true
-  id: google
-  name: google
-  urls:
-      - "https://www.google.com"
-  # not only check if response, everything should be fine too (basic http ok code = 200)
-  check.response.status: [200]
-  schedule: "@every 1s"

@@ -35,7 +35,6 @@ def main():
     host = os.getenv("RABBITMQ_HOST")
     virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
     queue = os.getenv("RABBITMQ_QUEUE")
-    exchange = os.getenv("RABBITMQ_EXCHANGE")
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
     print(f"Password: {password}")
@@ -180,23 +179,42 @@ def main():
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
-    channel.exchange_declare(exchange=exchange, exchange_type="direct")
     channel.queue_declare(queue=queue)
-    channel.queue_bind(exchange=exchange, queue=queue, routing_key="heartbeat")
 
     print("Connecting to Elasticsearch")
     es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
-        time.sleep(1)
+        time.sleep(2)
     print("Connected to Elasticsearch")
 
+    index_settings = {
+        "properties": {
+            "timestamp": {"type": "date", "format": "epoch_second"},
+        }
+    }
+
+    # # delete the index, needed when an old indice is existing with other settings
+    # try:
+    #     es.indices.delete(index="heartbeat-rabbitmq")
+    #     print("Index deleted")
+    # except Exception as e:
+    #     print(f"Error deleting index: {e}")
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
         print("Index created")
+        # edit the index so that the timestamp value is a real timestamp
+        try:
+            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
+            print("Index settings updated")
+        except Exception as e:
+            print(f"Error updating index settings: {e}")
     except Exception as e:
         print(f"Error creating index: {e}")
+
+    # consume all messages to clear the queue (avoid to get false stat when we are down/starting/...)
+    channel.queue_purge(queue)
 
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
