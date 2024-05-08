@@ -86,12 +86,34 @@ You may need to run the following to fix some permission issues depending on you
 
 ```bash
 chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
-chmod -R go-w ./ELK/heartbeat/services/
 chmod -R 777 ./ELK/elasticsearch/data/
 ```
 
 **Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
+
+## Restart from scratch
+
+If you wish to restart from scratch you can:
+
+go into the `./src` folder and run the following command:
+
+```bash
+sudo bash ./main.bash down
+```
+
+And then delete the volumes with the following command:
+
+```bash
+sudo rm -rf ../ELK/elasticsearch/data/
+```
+
+Now you will only need to change any config file you have changed (like `heartbeat_rabbitmq.csv` or the `export.ndjson`) and run the setup:
+
+```bash
+sudo bash ./main.bash setup
+```
+
+**Note** If you really want to reset everything from scratch including any config files you've changed, you can delete the repo and clone it again (make sure to backup any important files and that everything is down before processing).
 
 ### Reverse-proxy
 
