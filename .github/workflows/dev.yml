@@ -34,4 +34,4 @@ jobs:
 
             # we assume the path is standard like on all of our servers
             - name: Deploy
-              run: cd /monitoring/Monitoring/src && sudo bash ./main.bash down && sudo bash ./main.bash setup CD;
+              run: cd /monitoring/Monitoring/src && bash ./main.bash down && bash ./main.bash setup CD;

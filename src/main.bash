@@ -3,6 +3,8 @@
 # run this script as root
 if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
+    echo "Waiting 10s as confirmation"
+    sleep 10s
 fi
 
 cd src || echo "already in src"
@@ -10,8 +12,8 @@ cd src || echo "already in src"
 fix_permissions() {
     # chmod just in case
     # should be changed with untrusted users
-    sudo chmod -R 777 ../ELK/elasticsearch/data/
-    sudo chmod +rwx ./setup/entrypoint.sh
+    chmod -R 777 ../ELK/elasticsearch/data/
+    chmod +rwx ./setup/entrypoint.sh
 }
 fix_permissions
 finish() {
