@@ -1,0 +1,43 @@
+name: CI/CD
+
+on:
+    push:
+        branches:
+            - dev
+            - main
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+            # install docker compose for yml validation, not needed anymore as it should be inside the test script
+            # - name: Install Docker Compose
+            #   run: sudo apt update && sudo apt install docker-compose -y
+            # this is needed else src-consumer will not be able to connect to rabbitmq => infinitly restart
+            - name: Start RabbitMQ
+              run: docker-compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
+            - name: Run test script
+              run: sudo bash ./src/tests-script.bash
+        # - name: Build the Docker image
+        #   run: docker build . --file Dockerfile --tag ELK:$(date +%s)
+
+    deploy:
+        runs-on: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+        needs: build
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: start rabbitmq
+              run: cd /monitoring/Monitoring/extra/rabbitmq_general_team && docker compose up -d
+
+            # we assume the path is standard like on all of our servers
+            - name: Deploy ELK
+              run: cd /monitoring/Monitoring/src && bash ./main.bash down && bash ./main.bash setup CD
+
+            - name: Deploy backup agent
+              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose down && docker compose up -d
+
+            - name: Instantly do a backup
+              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker-compose exec -T backup ./backup.sh < /dev/null

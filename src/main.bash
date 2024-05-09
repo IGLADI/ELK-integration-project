@@ -3,6 +3,8 @@
 # run this script as root
 if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
+    echo "Waiting 10s as confirmation"
+    sleep 10s
 fi
 
 cd src || echo "already in src"
@@ -10,8 +12,8 @@ cd src || echo "already in src"
 fix_permissions() {
     # chmod just in case
     # should be changed with untrusted users
-    sudo chmod -R 777 ../ELK/elasticsearch/data/
-    sudo chmod +rwx ./setup/entrypoint.sh
+    chmod -R 777 ../ELK/elasticsearch/data/
+    chmod +rwx ./setup/entrypoint.sh
 }
 fix_permissions
 finish() {
@@ -35,73 +37,77 @@ if [[ "${1,,}" == "setup" ]]; then
     # just to tell  the user in what mode the script is running
     echo "Setting up for the first time"
 
-    if [ -z "$ELASTIC_VERSION" ]; then
-        echo "What version of elasticsearch do you want to use? (current latest is 8.12.2)"
-        read ELASTIC_VERSION
+    if [ $2 == "CD" ]; then
+        echo "You are running in CD mode, skipping questions, we assume the .env is already good"
+        sleep 10s
     else
-        echo "found ELASTIC_VERSION=$ELASTIC_VERSION"
-    fi
+        if [ -z "$ELASTIC_VERSION" ]; then
+            echo "What version of elasticsearch do you want to use? (current latest is 8.12.2)"
+            read ELASTIC_VERSION
+        else
+            echo "found ELASTIC_VERSION=$ELASTIC_VERSION"
+        fi
 
-    if [ -z "$ELASTIC_PASSWORD" ]; then
-        echo "What password do you want to use for elasticsearch?"
-        read -s ELASTIC_PASSWORD
-    else
-        echo "found ELASTIC_PASSWORD=$ELASTIC_PASSWORD"
-    fi
+        if [ -z "$ELASTIC_PASSWORD" ]; then
+            echo "What password do you want to use for elasticsearch?"
+            read -s ELASTIC_PASSWORD
+        else
+            echo "found ELASTIC_PASSWORD=$ELASTIC_PASSWORD"
+        fi
 
-    if [ -z "$KIBANA_SYSTEM_PASSWORD" ]; then
-        echo "What password do you want to use for kibana?"
-        read -s KIBANA_SYSTEM_PASSWORD
-    else
-        echo "found KIBANA_SYSTEM_PASSWORD=$KIBANA_SYSTEM_PASSWORD"
-    fi
+        if [ -z "$KIBANA_SYSTEM_PASSWORD" ]; then
+            echo "What password do you want to use for kibana?"
+            read -s KIBANA_SYSTEM_PASSWORD
+        else
+            echo "found KIBANA_SYSTEM_PASSWORD=$KIBANA_SYSTEM_PASSWORD"
+        fi
 
-    if [ -z "$RABBITMQ_USERNAME" ]; then
-        echo "What is your rabbitmq username?"
-        read RABBITMQ_USERNAME
-    else
-        echo "found RABBITMQ_USERNAME=$RABBITMQ_USERNAME"
-    fi
+        if [ -z "$RABBITMQ_USERNAME" ]; then
+            echo "What is your rabbitmq username?"
+            read RABBITMQ_USERNAME
+        else
+            echo "found RABBITMQ_USERNAME=$RABBITMQ_USERNAME"
+        fi
 
-    if [ -z "$RABBITMQ_PASSWORD" ]; then
-        echo "What is your rabbitmq password?"
-        read -s RABBITMQ_PASSWORD
-    else
-        echo "found RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
-    fi
+        if [ -z "$RABBITMQ_PASSWORD" ]; then
+            echo "What is your rabbitmq password?"
+            read -s RABBITMQ_PASSWORD
+        else
+            echo "found RABBITMQ_PASSWORD=$RABBITMQ_PASSWORD"
+        fi
 
-    if [ -z "$RABBITMQ_HOST" ]; then
-        echo "What is your rabbitmq host?"
-        read RABBITMQ_HOST
-    else
-        echo "found RABBITMQ_HOST=$RABBITMQ_HOST"
-    fi
+        if [ -z "$RABBITMQ_HOST" ]; then
+            echo "What is your rabbitmq host?"
+            read RABBITMQ_HOST
+        else
+            echo "found RABBITMQ_HOST=$RABBITMQ_HOST"
+        fi
 
-    if [ -z "$RABBITMQ_VIRTUAL_HOST" ]; then
-        echo "What is your rabbitmq virtual host?"
-        read RABBITMQ_VIRTUAL_HOST
-    else
-        echo "found RABBITMQ_VIRTUAL_HOST=$RABBITMQ_VIRTUAL_HOST"
-    fi
+        if [ -z "$RABBITMQ_VIRTUAL_HOST" ]; then
+            echo "What is your rabbitmq virtual host?"
+            read RABBITMQ_VIRTUAL_HOST
+        else
+            echo "found RABBITMQ_VIRTUAL_HOST=$RABBITMQ_VIRTUAL_HOST"
+        fi
 
-    if [ -z "$RABBITMQ_QUEUE" ]; then
-        echo "What is your rabbitmq queue where the heartbeats will be published?"
-        read RABBITMQ_QUEUE
-    else
-        echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
+        if [ -z "$RABBITMQ_QUEUE" ]; then
+            echo "What is your rabbitmq queue where the heartbeats will be published?"
+            read RABBITMQ_QUEUE
+        else
+            echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
+        fi
+        # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
+        echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
+        # for now you can't edit the admin username
+        echo "ELASTIC_USERNAME='elastic'" >>.env
+        echo "ELASTIC_PASSWORD='$ELASTIC_PASSWORD'" >>.env
+        echo "KIBANA_SYSTEM_PASSWORD='$KIBANA_SYSTEM_PASSWORD'" >>.env
+        echo "RABBITMQ_USERNAME='$RABBITMQ_USERNAME'" >>.env
+        echo "RABBITMQ_PASSWORD='$RABBITMQ_PASSWORD'" >>.env
+        echo "RABBITMQ_HOST='$RABBITMQ_HOST'" >>.env
+        echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
+        echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
     fi
-
-    # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
-    echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
-    # for now you can't edit the admin username
-    echo "ELASTIC_USERNAME='elastic'" >>.env
-    echo "ELASTIC_PASSWORD='$ELASTIC_PASSWORD'" >>.env
-    echo "KIBANA_SYSTEM_PASSWORD='$KIBANA_SYSTEM_PASSWORD'" >>.env
-    echo "RABBITMQ_USERNAME='$RABBITMQ_USERNAME'" >>.env
-    echo "RABBITMQ_PASSWORD='$RABBITMQ_PASSWORD'" >>.env
-    echo "RABBITMQ_HOST='$RABBITMQ_HOST'" >>.env
-    echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
-    echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
 
     # force recreate just in case the network is bugged (due to a previous version)
     docker compose up setup --force-recreate -d
