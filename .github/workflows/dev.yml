@@ -4,7 +4,7 @@ on:
     push:
         branches:
             - dev
-            - CD
+            - main
 
 jobs:
     build:
@@ -24,7 +24,7 @@ jobs:
         #   run: docker build . --file Dockerfile --tag ELK:$(date +%s)
 
     deploy:
-        runs-on: development
+        runs-on: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         needs: build
         steps:
             - uses: actions/checkout@v4
