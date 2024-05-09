@@ -30,8 +30,14 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: start rabbitmq
-              run: cd /monitoring/Monitoring/extra/rabbitmq_general_team/ && docker compose up -d
+              run: cd /monitoring/Monitoring/extra/rabbitmq_general_team && docker compose up -d
 
             # we assume the path is standard like on all of our servers
-            - name: Deploy
-              run: cd /monitoring/Monitoring/src && bash ./main.bash down && bash ./main.bash setup CD;
+            - name: Deploy ELK
+              run: cd /monitoring/Monitoring/src && bash ./main.bash down && bash ./main.bash setup CD
+
+            - name: Deploy backup agent
+              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose down && docker compose up -d
+
+            - name: Instantly do a backup
+              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker-compose exec -T backup ./backup.sh < /dev/null

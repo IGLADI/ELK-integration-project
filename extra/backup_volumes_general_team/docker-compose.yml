@@ -3,5 +3,7 @@ services:
         image: jareware/docker-volume-backup
         env_file: ./.env
         volumes:
-            - /var/lib/docker/volumes:/backup/volumes:ro # mount all volumes to backup
-        restart: alway
+            - /var/lib/docker/volumes:/backup//var/lib/docker/volumes:ro # mount all volumes to backup
+            - /home/nour/testNourFrontend/Frontend/hackathon-app:/backup/home/nour/testNourFrontend/Frontend/hackathon-app:ro
+            - /monitoring/Monitoring/ELK/elasticsearch/data:/backup/monitoring/Monitoring/ELK/elasticsearch/data:ro
+        restart: always
