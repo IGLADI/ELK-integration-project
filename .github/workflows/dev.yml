@@ -40,4 +40,4 @@ jobs:
               run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose down && docker compose up -d
 
             - name: Instantly do a backup
-              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker-compose exec -T backup ./backup.sh < /dev/null
+              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose exec -T backup ./backup.sh < /dev/null
