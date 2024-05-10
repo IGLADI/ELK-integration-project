@@ -86,6 +86,8 @@ def main():
         print(f"=====================================\nReceived message:{message}")
 
         # parse xml
+        # remove " xmlns="http://ehb.local" from the xml if present in it
+        message = message.replace(' xmlns="http://ehb.local"', '')
         root = ET.fromstring(message)
 
         # parse it to json
