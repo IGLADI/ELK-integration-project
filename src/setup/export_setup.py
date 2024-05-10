@@ -37,7 +37,12 @@ print("sending:", files)
 
 # upload the saved objects to kibana api
 headers = {"kbn-xsrf": "true"}
-resp = requests.post(url3, auth=HTTPBasicAuth(kibana_username, kibana_password), files=files, headers=headers)
+resp = requests.post(
+    url3,
+    auth=HTTPBasicAuth(kibana_username, kibana_password),
+    files=files,
+    headers=headers,
+)
 
 print("got:")
 print(resp)
