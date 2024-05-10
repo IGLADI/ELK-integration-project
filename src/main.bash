@@ -31,7 +31,7 @@ RABBITMQ_PASSWORD=$6
 RABBITMQ_HOST=$7
 RABBITMQ_VIRTUAL_HOST=$8
 RABBITMQ_QUEUE=$9
-LOGGING_QUEUE=$10
+LOGGING_QUEUE=${10}
 
 # not case senitive
 if [[ "${1,,}" == "setup" ]]; then
