@@ -24,10 +24,10 @@ Before running the script, make sure you have a RabbitMQ instance running. If th
 docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
 ```
 
-Before running any of the next commands, please make sure you're in the `src` folder with the following command:
+Before running any of the next commands, please make sure you're in the `/monitoring/Monitoring/src` folder (or similar if you have placed the project somewhere else) with the following command:
 
 ```bash
-cd src
+cd /monitoring/Monitoring/src
 ```
 
 To setup the service for the first time, run the following command:

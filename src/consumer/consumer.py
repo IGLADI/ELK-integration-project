@@ -35,12 +35,14 @@ def main():
     host = os.getenv("RABBITMQ_HOST")
     virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
     queue = os.getenv("RABBITMQ_QUEUE")
+    log_queue = os.getenv("LOGGING_QUEUE")
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
     print(f"Password: {password}")
     print(f"Host: {host}")
     print(f"Virtual Host: {virtual_host}")
     print(f"Queue: {queue}")
+    print(f"Log queue: {log_queue}")
     print("=====================================")
 
     elastic_username = os.getenv("ELASTIC_USERNAME")
@@ -57,42 +59,65 @@ def main():
     global services_last_timestamp
     services_last_timestamp = {}
 
-    # pylance lies, callbacks call 4 args
-    def heartbeat_callback(ch, method, properties, body):
+    def parse_element(element, json_data, index=None):
+        if len(element) == 0:
+            # if no more child
+            if element.text is not None:
+                tag = element.tag
+                # when multiple tags with the same name, add numbers to differenciete them
+                og_tag = tag
+                while tag in json_data:
+                    if index is None:
+                        index = 2
+                    else:
+                        index += 1
+                    tag = f"{og_tag}-{index}"
+                json_data[tag] = element.text
+            else:
+                json_data[element.tag] = "None"
+        else:
+            # recursively parse each child
+            for child in element:
+                index = parse_element(child, json_data)
+        return index
+
+    def parse_xml_json(body):
         message = body.decode("utf-8")
         print(f"=====================================\nReceived message:{message}")
 
         # parse xml
-        try:
-            root = ET.fromstring(message)
-        except ET.ParseError:
-            print("\33[31mError parsing XML\33[0m")
+        # remove " xmlns="http://ehb.local" from the xml if present in it
+        message = message.replace(' xmlns="http://ehb.local"', '')
+        root = ET.fromstring(message)
 
         # parse it to json
+        print("Parsed XML:")
+        json_data = {}
+
+        parse_element(root, json_data)
+
+        # add a timestamp if missing
+        if "timestamp" not in json_data:
+            timestamp = int(time.time())
+            json_data["timestamp"] = timestamp
+
+        json_message = json.dumps(json_data)
+        print(f"JSON message:\n{json_message}")
+
+        return json_message, json_data
+
+    def log_callback(ch, method, properties, body):
+        json_message, _ = parse_xml_json(body)
+
+        # send to elasticsearch
         try:
-            print("Parsed XML:")
-            json_data = {}
-            for child in root:
-                print(child.tag, child.text)
-                # can't parse None into elasticsearch
-                if child.text is not None:
-                    json_data[child.tag] = child.text
-                else:
-                    json_data[child.tag] = "None"
-
-            # # convert timestamp to iso format
-            # we now use a unix/epoch in kibana, kept in case
-            # if is_timestamp(json_data["timestamp"]):
-            #     json_data["timestamp"] = convert_to_iso_timestamp(json_data["timestamp"])
-            #     print("converted timestamp:" + json_data["timestamp"])
-            # else:
-            #     print("\33[31mNot a valid timestamp or timestamp not in unix or no timestamp\33[0m")
-
-            json_message = json.dumps(json_data)
-            print("JSON message:")
-            print(json_message)
+            es.index(index="logs", body=json_message)
         except Exception as e:
-            print(f"\33[31mError parsing  JSON: {e}\33[0m")
+            print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
+
+    # pylance lies, callbacks call 4 args
+    def heartbeat_callback(ch, method, properties, body):
+        json_message, json_data = parse_xml_json(body)
 
         # send to elasticsearch
         try:
@@ -142,7 +167,12 @@ def main():
 
     def create_callback_check_services_down(services):
         for service in services:
-            threading.Thread(target=check_service_down, name="check_service_down", args=(service[0],), daemon=True).start()
+            threading.Thread(
+                target=check_service_down,
+                name="check_service_down",
+                args=(service[0],),
+                daemon=True,
+            ).start()
 
     def update_services():
         while True:
@@ -162,7 +192,9 @@ def main():
             stop_callback_check_services_down()
 
             current_timestamp = int(time.time())
-            services_last_timestamp = {service[0]: current_timestamp for service in services}
+            services_last_timestamp = {
+                service[0]: current_timestamp for service in services
+            }
 
             create_callback_check_services_down(services)
 
@@ -175,14 +207,22 @@ def main():
     print(f"Host: {host}")
     print(f"Virtual Host: {virtual_host}")
     print(f"Queue: {queue}")
+    print(f"Log queue: {log_queue}")
     print("=====================================")
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=host, virtual_host=virtual_host, credentials=credentials
+        )
+    )
     channel = connection.channel()
     channel.queue_declare(queue=queue)
+    channel.queue_declare(queue=log_queue)
 
     print("Connecting to Elasticsearch")
-    es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
+    es = Elasticsearch(
+        ["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password)
+    )
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
         time.sleep(2)
@@ -197,16 +237,22 @@ def main():
     # # delete the index, needed when an old indice is existing with other settings
     # try:
     #     es.indices.delete(index="heartbeat-rabbitmq")
+    #     es.indices.delete(index="logs")
     #     print("Index deleted")
     # except Exception as e:
     #     print(f"Error deleting index: {e}")
+
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
-        print("Index created")
+        es.indices.create(index="logs", ignore=400)
+        print("Indexes created")
         # edit the index so that the timestamp value is a real timestamp
         try:
-            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
+            es.indices.put_mapping(
+                index="heartbeat-rabbitmq", body=index_settings, ignore=400
+            )
+            es.indices.put_mapping(index="logs", body=index_settings, ignore=400)
             print("Index settings updated")
         except Exception as e:
             print(f"Error updating index settings: {e}")
@@ -219,7 +265,12 @@ def main():
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
 
-    channel.basic_consume(queue=queue, on_message_callback=heartbeat_callback, auto_ack=True)
+    channel.basic_consume(
+        queue=queue, on_message_callback=heartbeat_callback, auto_ack=True
+    )
+    channel.basic_consume(
+        queue=log_queue, on_message_callback=log_callback, auto_ack=True
+    )
     print("Waiting for msgs.")
     channel.start_consuming()
 

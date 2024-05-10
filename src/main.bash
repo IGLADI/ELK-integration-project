@@ -31,6 +31,7 @@ RABBITMQ_PASSWORD=$6
 RABBITMQ_HOST=$7
 RABBITMQ_VIRTUAL_HOST=$8
 RABBITMQ_QUEUE=$9
+LOGGING_QUEUE=${10}
 
 # not case senitive
 if [[ "${1,,}" == "setup" ]]; then
@@ -96,6 +97,14 @@ if [[ "${1,,}" == "setup" ]]; then
         else
             echo "found RABBITMQ_QUEUE=$RABBITMQ_QUEUE"
         fi
+
+        if [ -z "$LOGGING_QUEUE" ]; then
+            echo "What is your rabbitmq queue where the logs will be published?"
+            read LOGGING_QUEUE
+        else
+            echo "found LOGGING_QUEUE=$LOGGING_QUEUE"
+        fi
+
         # write everything into the file, so if the user cancels whil typing we don't have a half filled in .env
         echo "ELASTIC_VERSION=$ELASTIC_VERSION" >.env
         # for now you can't edit the admin username
@@ -107,6 +116,7 @@ if [[ "${1,,}" == "setup" ]]; then
         echo "RABBITMQ_HOST='$RABBITMQ_HOST'" >>.env
         echo "RABBITMQ_VIRTUAL_HOST='$RABBITMQ_VIRTUAL_HOST'" >>.env
         echo "RABBITMQ_QUEUE='$RABBITMQ_QUEUE'" >>.env
+        echo "LOGGING_QUEUE='$LOGGING_QUEUE'" >>.env
     fi
 
     # force recreate just in case the network is bugged (due to a previous version)

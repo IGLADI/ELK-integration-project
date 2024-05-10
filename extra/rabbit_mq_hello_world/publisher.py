@@ -8,7 +8,13 @@ def send_message(message):
         password = env.readline().strip()
     credentials = pika.PlainCredentials("mrgydtsi", password)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="rat.rmq2.cloudamqp.com", virtual_host="mrgydtsi", credentials=credentials))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host="rat.rmq2.cloudamqp.com",
+            virtual_host="mrgydtsi",
+            credentials=credentials,
+        )
+    )
     channel = connection.channel()
 
     # not sure if it will have CAPS or not
