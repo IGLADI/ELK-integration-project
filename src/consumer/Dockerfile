@@ -5,6 +5,8 @@ WORKDIR /app
 # the csv is a volume, so we don't need to copy it here
 COPY ./consumer.py ./consumer.py
 COPY ./requirements.txt ./requirements.txt
+COPY ./template.xsd ./template.xsd
+COPY ./xmlxsd/ ./xmlxsd/
 
 RUN pip install -r ./requirements.txt
 

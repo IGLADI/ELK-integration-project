@@ -4,11 +4,12 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from lxml import etree
+import subprocess
 
 import dotenv
 import pika
 from elasticsearch import Elasticsearch
-from lxml import etree
 
 
 def is_timestamp(input_str):
@@ -36,7 +37,6 @@ def main():
     host = os.getenv("RABBITMQ_HOST")
     virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
     queue = os.getenv("RABBITMQ_QUEUE")
-    exchange = os.getenv("RABBITMQ_EXCHANGE")
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
     print(f"Password: {password}")
@@ -60,9 +60,12 @@ def main():
     services_last_timestamp = {}
 
     def validate_xml(xml_file, xsd_file) -> bool:
-        xml_doc = etree.parse(xml_file)
-        xsd_doc = etree.parse(xsd_file)
-        xml_schema = etree.XMLschema(xsd_doc)
+        xml_doc = etree.fromstring(xml_file)
+        xsd_doc = etree.parse(xsd_file) # error on this line stems from template.xsd not being loaded,
+                                        # errorcode is diff with ET but means the same thing (probably something really stupid)
+        xml_schema = etree.XMLSchema(xsd_doc)
+        print(xml_doc)
+        print(xml_file)
         is_valid = xml_schema.validate(xml_doc)
 
         if is_valid:
@@ -73,9 +76,11 @@ def main():
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
-        if validate_xml(message, "../template.xsd"):
+        # ERROR: can't seem to load template.xsd
+        if validate_xml(message, "/app/template.xsd"):
             pass
         else:
+            print("did not work :(")
             return False
         print(f"=====================================\nReceived message:{message}")
 
@@ -137,9 +142,8 @@ def main():
                     f"""<heartbeat>
                     <service>{service}</service>
                     <timestamp>{current_timestamp-5}</timestamp>
-                    <error>503</error>
+                    <error>No heartbeat received</error>
                     <status>down</status>
-                    <extra><message>Didn't received heartbeat in 5s</message></extra>
                 </heartbeat>""".encode(
                         "utf-8"
                     ),
@@ -207,9 +211,7 @@ def main():
         )
     )
     channel = connection.channel()
-    channel.exchange_declare(exchange=exchange, exchange_type="direct")
     channel.queue_declare(queue=queue)
-    channel.queue_bind(exchange=exchange, queue=queue, routing_key="heartbeat")
 
     print("Connecting to Elasticsearch")
     es = Elasticsearch(
