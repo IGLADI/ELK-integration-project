@@ -28,6 +28,10 @@ services:
 
     elasticsearch:
         image: elasticsearch:${ELASTIC_VERSION:-}
+        deploy:
+            resources:
+                limits:
+                    memory: 2G
         container_name: elasticsearch
         ports:
             - 19200:9200
