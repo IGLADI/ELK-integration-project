@@ -56,6 +56,8 @@ For the manual install guide, please click [here](manual_install.md).
 
 ### Heartbeat monitoring
 
+If you'd like to monitor the heartbeats, click [here](http://10.2.160.10:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))).
+
 If you'd like to add a service to monitor, please follow these steps:
 
 Considering you're still in the `./src` folder, run:
@@ -79,6 +81,10 @@ nano ./heartbeat_rabbitmq.csv
 We expect the services to monitor to push the following [XSD format](./template.xsd) to the queue.
 
 ## Troubleshooting
+
+### Viewing logs
+
+You can check the non-kibana logs [here](http://10.2.160.10:16601/app/dashboards#/view/1ddc8ef2-2366-4696-ab67-b389cbc907c5?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now)))
 
 ### Fixing permissions
 
@@ -125,7 +131,7 @@ Whilst the service is starting up, you may have issues whilst loading the web in
 
 **Note**
 
--   You may also want to check [tests](README.md#Tests), or check the container logs with `docker logs <container_id>`.
+-   You may also want to check [tests](README.md#Tests), or check the container logs with `docker logs <container_id>` or [portainer](https://10.2.160.10:17443/#!/2/docker/containers).
 -   If you wish to access more website tips, please click [here](website_utils.md).
 
 ## Tests
