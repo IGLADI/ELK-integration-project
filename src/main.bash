@@ -144,11 +144,11 @@ fi
 if [[ "${1,,}" == "stop" || "${1,,}" == "down" ]]; then
     docker compose down
     # clear the src-consumer container image so it will be updated if changed on next up
-    docker image rm src-consumer:latest --force
+    docker image rm src-consumer:latest --force | echo "no consumer images to remove:"
 
     # remove setups if active
-    docker compose down setup setup-export | echo "no setup containers to stop:"
-    docker rmi src-setup src-setup-export | echo "no setup images to remove:"
+    docker rmi src-setup src-setup --force | echo "no setup images to remove:"
+    docker rmi src-setup src-setup-export --force | echo "no setup exporter images to remove:"
 
     echo "Stopped the environment"
 fi
