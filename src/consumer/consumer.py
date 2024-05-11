@@ -154,7 +154,7 @@ def main():
                     f"""<heartbeat>
                     <service>{service}</service>
                     <timestamp>{current_timestamp-5}</timestamp>
-                    <error>503</error>
+                    <error>No heartbeat received</error>
                     <status>down</status>
                     <extra><message>Didn't received heartbeat in 5s</message></extra>
                 </heartbeat>""".encode(
