@@ -4,6 +4,7 @@ import threading
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
+import re
 
 import dotenv
 import pika
@@ -85,9 +86,11 @@ def main():
         message = body.decode("utf-8")
         print(f"=====================================\nReceived message:{message}")
 
+        # remove " xmlns="http://ehb.local"" from the xml if present in it or ('<?xml version="1.0" encoding="UTF-8"?>', '') or similar (using re)
+        message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', '', message)
+        # usefull for debugging re (i hate re, wish I was a 10x dev 😔)
+        # print(f"cleaned message: {message}")
         # parse xml
-        # remove " xmlns="http://ehb.local" from the xml if present in it
-        message = message.replace(' xmlns="http://ehb.local"', '')
         root = ET.fromstring(message)
 
         # parse it to json
@@ -107,7 +110,10 @@ def main():
         return json_message, json_data
 
     def log_callback(ch, method, properties, body):
-        json_message, _ = parse_xml_json(body)
+        try:
+            json_message, _ = parse_xml_json(body)
+        except Exception as e:
+            print(f"\33[31mError parsing xml to json: {e}\33[0m")
 
         # send to elasticsearch
         try:
@@ -117,7 +123,10 @@ def main():
 
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
-        json_message, json_data = parse_xml_json(body)
+        try:
+            json_message, json_data = parse_xml_json(body)
+        except Exception as e:
+            print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
         # send to elasticsearch
         try:
