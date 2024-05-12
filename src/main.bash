@@ -5,19 +5,20 @@ if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "We recommend running this script as root"
     echo "Waiting 10s as confirmation"
     sleep 10s
+else
+    fix_permissions() {
+        # chmod just in case
+        # should be changed with untrusted users
+        chmod -R 777 ../ELK/elasticsearch/data/
+        chmod +rwx ./setup/entrypoint.sh
+    }
+    fix_permissions
 fi
 
 cd src || echo "already in src"
 
-fix_permissions() {
-    # chmod just in case
-    # should be changed with untrusted users
-    chmod -R 777 ../ELK/elasticsearch/data/
-    chmod +rwx ./setup/entrypoint.sh
-}
-fix_permissions
 finish() {
-    echo "Now you can access kibana at http://localhost:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
+    echo "Now you can access kibana at http://10.2.160.10:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))"
     echo "Note that you should replace localhost with the ip of the machine where the docker containers are running if you are accessing from another machine"
     echo "Go check out the readme for future steps and setup your first services to monitor"
 }
@@ -35,6 +36,11 @@ LOGGING_QUEUE=${10}
 
 # not case senitive
 if [[ "${1,,}" == "setup" ]]; then
+    if [ $(/usr/bin/id -u) -ne 0 ]; then
+        echo "DURING SETUP WE SERIOUSLY RECOMEND RUNNING THIS SCRIPT AS ROOT"
+        echo "Waiting 60s as confirmation"
+        sleep 60s
+    fi
     # just to tell  the user in what mode the script is running
     echo "Setting up for the first time"
 
