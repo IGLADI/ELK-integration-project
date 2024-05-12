@@ -75,7 +75,7 @@ def main():
                     tag = f"{og_tag}-{index}"
                 json_data[tag] = element.text
             else:
-                json_data[element.tag] = "None"
+                json_data[element.tag] = "No error"
         else:
             # recursively parse each child
             for child in element:
@@ -87,7 +87,7 @@ def main():
         print(f"=====================================\nReceived message:{message}")
 
         # remove " xmlns="http://ehb.local"" from the xml if present in it or ('<?xml version="1.0" encoding="UTF-8"?>', '') or similar (using re)
-        message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', '', message)
+        message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', "", message)
         # usefull for debugging re (i hate re, wish I was a 10x dev 😔)
         # print(f"cleaned message: {message}")
         # parse xml
@@ -103,6 +103,10 @@ def main():
         if "timestamp" not in json_data:
             timestamp = int(time.time())
             json_data["timestamp"] = timestamp
+
+        if "error" not in json_data:
+            error = ""
+            json_data["error"] = error
 
         json_message = json.dumps(json_data)
         print(f"JSON message:\n{json_message}")
@@ -201,9 +205,7 @@ def main():
             stop_callback_check_services_down()
 
             current_timestamp = int(time.time())
-            services_last_timestamp = {
-                service[0]: current_timestamp for service in services
-            }
+            services_last_timestamp = {service[0]: current_timestamp for service in services}
 
             create_callback_check_services_down(services)
 
@@ -219,19 +221,13 @@ def main():
     print(f"Log queue: {log_queue}")
     print("=====================================")
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host=host, virtual_host=virtual_host, credentials=credentials
-        )
-    )
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue=queue)
     channel.queue_declare(queue=log_queue)
 
     print("Connecting to Elasticsearch")
-    es = Elasticsearch(
-        ["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password)
-    )
+    es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
         time.sleep(2)
@@ -258,9 +254,7 @@ def main():
         print("Indexes created")
         # edit the index so that the timestamp value is a real timestamp
         try:
-            es.indices.put_mapping(
-                index="heartbeat-rabbitmq", body=index_settings, ignore=400
-            )
+            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
             es.indices.put_mapping(index="logs", body=index_settings, ignore=400)
             print("Index settings updated")
         except Exception as e:
@@ -274,12 +268,8 @@ def main():
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
 
-    channel.basic_consume(
-        queue=queue, on_message_callback=heartbeat_callback, auto_ack=True
-    )
-    channel.basic_consume(
-        queue=log_queue, on_message_callback=log_callback, auto_ack=True
-    )
+    channel.basic_consume(queue=queue, on_message_callback=heartbeat_callback, auto_ack=True)
+    channel.basic_consume(queue=log_queue, on_message_callback=log_callback, auto_ack=True)
     print("Waiting for msgs.")
     channel.start_consuming()
 
