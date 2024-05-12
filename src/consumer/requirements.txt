@@ -3,3 +3,4 @@ pika
 python-dotenv
 elasticsearch
 lxml
+XMLSchema

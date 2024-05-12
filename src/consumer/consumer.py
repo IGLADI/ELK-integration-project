@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import xml.etree.ElementTree as ET
+import xmlschema
 from datetime import datetime
 from lxml import etree
 import subprocess
@@ -60,29 +61,52 @@ def main():
     services_last_timestamp = {}
 
     def validate_xml(xml_file, xsd_file) -> bool:
-        xml_doc = etree.fromstring(xml_file)
-        xsd_doc = etree.parse(xsd_file) # error on this line stems from template.xsd not being loaded,
-                                        # errorcode is diff with ET but means the same thing (probably something really stupid)
-        xml_schema = etree.XMLSchema(xsd_doc)
-        print(xml_doc)
-        print(xml_file)
-        is_valid = xml_schema.validate(xml_doc)
-
-        if is_valid:
-            return True
-        else:
-            return False
-
+        
+        schema = xmlschema.XMLSchema(xsd_file)
+        tree = ET.parse(xml_file)
+        if not tree.validate(schema):
+            raise ValueError('xml invalid')
+        
+        # try:
+        #     # Convert Unicode strings to byte strings
+        #     xml_bytes = xml_file.encode()
+        #     xsd_bytes = xsd_file.encode()
+            
+        #     # Parse XML document from byte string
+        #     xml_doc = etree.fromstring(xml_bytes)
+            
+        #     # Parse XSD document from byte string
+        #     xsd_doc = etree.fromstring(xsd_bytes)
+            
+        #     # Create XML schema object
+        #     xml_schema = etree.XMLSchema(etree.XML(xsd_doc))
+            
+        #     # Validate XML document against XML schema
+        #     is_valid = xml_schema.validate(xml_doc)
+            
+        #     return is_valid
+        # except Exception as e:
+        #     print(f"Error occurred during XML validation: {e}")
+        #     return False
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
+        
         # ERROR: can't seem to load template.xsd
-        if validate_xml(message, "/app/template.xsd"):
-            pass
+    # DEBUG: Print the received message
+        # print(f"Received message: {message}")
+        
+        # try:
+        #     # Load XSD file
+        #     with open('/app/template.xsd', 'r') as file:
+        #         xsd_content = file.read()
+            
+        #     print(f"Loaded XSD content: {xsd_content}")
+            
+        if validate_xml(message, '/app/template.xsd'):
+            print("Message validated successfully!")
         else:
-            print("did not work :(")
-            return False
-        print(f"=====================================\nReceived message:{message}")
+            print("Message validation failed!")
 
         # parse xml
         try:

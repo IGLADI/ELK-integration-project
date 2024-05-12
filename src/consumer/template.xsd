@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           xmlns:r="http://ehb.local"
-           targetNamespace="http://ehb.local">
-<xs:include schemaLocation="/app/xmlxsd/main.xsd"/>
+<?xml version="1.0"?>
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:r="http://ehb.local"
+    targetNamespace="http://ehb.local">
+
+    <xs:include schemaLocation="/app/main.xsd"/>
 
   <xs:element name="heartbeat">
     <xs:complexType>
