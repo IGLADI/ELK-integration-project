@@ -6,7 +6,13 @@ def main():
         password = env.readline().strip()
     credentials = pika.PlainCredentials("mrgydtsi", password)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="rat.rmq2.cloudamqp.com", virtual_host="mrgydtsi", credentials=credentials))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host="rat.rmq2.cloudamqp.com",
+            virtual_host="mrgydtsi",
+            credentials=credentials,
+        )
+    )
     channel = connection.channel()
 
     # not sure if it will have CAPS or not
@@ -18,7 +24,9 @@ def main():
         print(f"Received: {message}")
 
     # this queue = routing key from publisher
-    channel.basic_consume(queue="Heartbeat", on_message_callback=callback, auto_ack=True)
+    channel.basic_consume(
+        queue="Heartbeat", on_message_callback=callback, auto_ack=True
+    )
     print("Waiting for msgs.")
     channel.start_consuming()
 

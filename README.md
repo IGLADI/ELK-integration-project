@@ -5,8 +5,7 @@
 ## Tech stack
 
 -   Docker
--   ELK
--   Heartbeat (http monitoring for redundancy + may help with debugging)
+-   ELK stack
 -   Python
 -   RabbitMQ
 -   Bash/Shell scripting
@@ -25,10 +24,10 @@ Before running the script, make sure you have a RabbitMQ instance running. If th
 docker compose -f ./extra/rabbitmq_general_team/docker-compose.yml up -d
 ```
 
-Before running any of the next commands, please make sure you're in the `src` folder with the following command:
+Before running any of the next commands, please make sure you're in the `/monitoring/Monitoring/src` folder (or similar if you have placed the project somewhere else) with the following command:
 
 ```bash
-cd src
+cd /monitoring/Monitoring/src
 ```
 
 To setup the service for the first time, run the following command:
@@ -57,32 +56,25 @@ For the manual install guide, please click [here](manual_install.md).
 
 ### Heartbeat monitoring
 
+If you'd like to monitor the heartbeats, click [here](http://10.2.160.10:16601/app/dashboards#/view/f3e771c0-eb19-11e6-be20-559646f8b9ba?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now))).
+
 If you'd like to add a service to monitor, please follow these steps:
 
 Considering you're still in the `./src` folder, run:
 
 ```bash
-cd ../ELK/heartbeat/services
+cd ./consumer
 ```
 
-Create a `service.yml.unconfirmed` file based on the `template.yml.unconfirmed` file inside the `./ELK/heartbeat/services` folder with this command:
+After that, you'll be able to edit the csv with a list of service names you want to monitor.
 
 ```bash
-cp ./template.yml.unconfirmed ./service.yml.unconfirmed
-```
-
-Once filled in correctly, modify the name accordingly (modify `service` to the actual name of the service):
-
-```bash
-mv ./service.yml.unconfirmed ./service.yml
+nano ./heartbeat_rabbitmq.csv
 ```
 
 **Notes**
 
--   We check for new yaml files every 5 seconds, consider it may take up to 10 seconds (with both the dashboard and the service set to reload every second) before showing up.
--   We also update the consumer with the csv file every minute, so it may take up to 1.5 minutes before the service is fully operational.
--   While a yml file isn't configured properly, we recommend to keep the `.unconfirmed` extension.
--   If you temporarily don't want to monitor a service you can set `enabled: false` in the yaml file.
+-   We check for new csv file every minute, consider it may take up to 30 seconds (with both the dashboard and the service set to reload every second) before showing up.
 
 #### Heartbeat configuration
 
@@ -90,18 +82,44 @@ We expect the services to monitor to push the following [XSD format](./template.
 
 ## Troubleshooting
 
+### Viewing logs
+
+You can check the non-kibana logs [here](http://10.2.160.10:16601/app/dashboards#/view/1ddc8ef2-2366-4696-ab67-b389cbc907c5?_g=(filters:!(),refreshInterval:(pause:!f,value:1000),time:(from:now-24h%2Fh,to:now)))
+
 ### Fixing permissions
 
 You may need to run the following to fix some permission issues depending on your platform (in the home folder, not src folder):
 
 ```bash
 chmod +rwx ./src/setup/entrypoint.sh
-chmod go-w ./ELK/heartbeat/heartbeat.yml
-chmod -R go-w ./ELK/heartbeat/services/
 chmod -R 777 ./ELK/elasticsearch/data/
 ```
 
 **Note** the last chmod recursively adds all permissions to everyone. If this is set on a real server with untrusted users, please change this to only give the required permissions.
+
+### Restart from scratch
+
+If you wish to restart from scratch you can:
+
+go into the `./src` folder and run the following command:
+
+```bash
+sudo bash ./main.bash down
+```
+
+And then delete the volumes with the following command:
+
+```bash
+sudo rm -rf ../ELK/elasticsearch/data/
+```
+
+Now you will only need to change any config file you have changed (like `heartbeat_rabbitmq.csv` or the `export.ndjson`) and run the setup:
+
+```bash
+sudo bash ./main.bash setup
+```
+
+**Note** If you really want to reset everything from scratch including any config files you've changed, you can delete the repo and clone it again (make sure to backup any important files and that everything is down before processing).
 
 ### Reverse-proxy
 
@@ -113,12 +131,12 @@ Whilst the service is starting up, you may have issues whilst loading the web in
 
 **Note**
 
--   You may also want to check [tests](README.md#Tests), or check the container logs with `docker logs <container_id>`.
+-   You may also want to check [tests](README.md#Tests), or check the container logs with `docker logs <container_id>` or [portainer](https://10.2.160.10:17443/#!/2/docker/containers).
 -   If you wish to access more website tips, please click [here](website_utils.md).
 
 ## Tests
 
-### run all tests at once
+### Run all tests at once
 
 If you'd like to verify everything at once, there's a few steps to follow.
 
@@ -152,44 +170,6 @@ Once docker-compose is installed, please run the following command. If the file 
 
 ```bash
 docker-compose config --quiet && printf "OK\n" || printf "ERROR\n"
-```
-
-#### yaml validation
-
-First off, make sure the project is running. If it isn't running, please do so [here](README.md#Setup).
-
-Secondly, you'll need to enter the container. To do so, there's a few steps to follow.
-
-Get the required information of the container with the following command:
-
-```bash
-sudo docker container ls | grep heartbeat
-```
-
-Now, look for the container running heartbeat. Use the ID for the following command:
-
-```bash
-sudo docker exec -it <id> bash
-```
-
-Inside the container, you can validate the content of the yaml file with the commands written below.
-
-To validate the content of the yaml, enter the following command:
-
-```bash
-./heartbeat test config -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
-```
-
-If there are any errors and you'd like to see a more detailed explanation of what's good and wrong, use this command:
-
-```bash
-./heartbeat test output -c ~/heartbeat.yml --path.data ~/data/ --path.home ~
-```
-
-Once finished, exit the container with the following command:
-
-```bash
-exit
 ```
 
 ## Used ports (assigned range:16000-23999)
