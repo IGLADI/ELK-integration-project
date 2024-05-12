@@ -6,7 +6,7 @@ WORKDIR /app
 COPY ./consumer.py ./consumer.py
 COPY ./requirements.txt ./requirements.txt
 COPY ./template.xsd ./template.xsd
-COPY ./xmlxsd/ ./xmlxsd/
+COPY ./xmlxsd/main.xsd ./main.xsd
 
 RUN pip install -r ./requirements.txt
 

@@ -5,8 +5,7 @@ import time
 import xml.etree.ElementTree as ET
 import xmlschema
 from datetime import datetime
-from lxml import etree
-import subprocess
+import re
 
 import dotenv
 import pika
@@ -30,6 +29,41 @@ def convert_to_iso_timestamp(input_str):
         return "Not a valid timestamp"
 
 
+def validate_xml(xml_string, xsd_file):
+    schema = xmlschema.XMLSchema(xsd_file)
+    xml = ET.fromstring(xml_string)
+
+    # for debugging other ppls heartbeats
+    errors = schema.iter_errors(xml)
+    for error in errors:
+        print(f"sourceline: {error.sourceline}; path: {error.path} | reason: {error.reason} | message: {error.message}")
+
+    if not schema.is_valid(xml):
+        raise ValueError("xml invalid")
+
+    # try:
+    #     # Convert Unicode strings to byte strings
+    #     xml_bytes = xml_file.encode()
+    #     xsd_bytes = xsd_file.encode()
+
+    #     # Parse XML document from byte string
+    #     xml_doc = etree.fromstring(xml_bytes)
+
+    #     # Parse XSD document from byte string
+    #     xsd_doc = etree.fromstring(xsd_bytes)
+
+    #     # Create XML schema object
+    #     xml_schema = etree.XMLSchema(etree.XML(xsd_doc))
+
+    #     # Validate XML document against XML schema
+    #     is_valid = xml_schema.validate(xml_doc)
+
+    #     return is_valid
+    # except Exception as e:
+    #     print(f"Error occurred during XML validation: {e}")
+    #     return False
+
+
 def main():
     dotenv.load_dotenv()
 
@@ -38,12 +72,14 @@ def main():
     host = os.getenv("RABBITMQ_HOST")
     virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
     queue = os.getenv("RABBITMQ_QUEUE")
+    log_queue = os.getenv("LOGGING_QUEUE")
     print("Connecting to RabbitMQ with the following credentials:")
     print(f"Username: {username}")
     print(f"Password: {password}")
     print(f"Host: {host}")
     print(f"Virtual Host: {virtual_host}")
     print(f"Queue: {queue}")
+    print(f"Log queue: {log_queue}")
     print("=====================================")
 
     elastic_username = os.getenv("ELASTIC_USERNAME")
@@ -60,85 +96,81 @@ def main():
     global services_last_timestamp
     services_last_timestamp = {}
 
-    def validate_xml(xml_file, xsd_file) -> bool:
-        
-        schema = xmlschema.XMLSchema(xsd_file)
-        tree = ET.parse(xml_file)
-        if not tree.validate(schema):
-            raise ValueError('xml invalid')
-        
-        # try:
-        #     # Convert Unicode strings to byte strings
-        #     xml_bytes = xml_file.encode()
-        #     xsd_bytes = xsd_file.encode()
-            
-        #     # Parse XML document from byte string
-        #     xml_doc = etree.fromstring(xml_bytes)
-            
-        #     # Parse XSD document from byte string
-        #     xsd_doc = etree.fromstring(xsd_bytes)
-            
-        #     # Create XML schema object
-        #     xml_schema = etree.XMLSchema(etree.XML(xsd_doc))
-            
-        #     # Validate XML document against XML schema
-        #     is_valid = xml_schema.validate(xml_doc)
-            
-        #     return is_valid
-        # except Exception as e:
-        #     print(f"Error occurred during XML validation: {e}")
-        #     return False
+    def parse_element(element, json_data, index=None):
+        if len(element) == 0:
+            # if no more child
+            if element.text is not None:
+                tag = element.tag
+                # when multiple tags with the same name, add numbers to differenciete them
+                og_tag = tag
+                while tag in json_data:
+                    if index is None:
+                        index = 2
+                    else:
+                        index += 1
+                    tag = f"{og_tag}-{index}"
+                json_data[tag] = element.text
+            else:
+                json_data[element.tag] = "None"
+        else:
+            # recursively parse each child
+            for child in element:
+                index = parse_element(child, json_data)
+        return index
+
+    def parse_xml_json(body):
+        message = body.decode("utf-8")
+        print(f"=====================================\nReceived message:{message}")
+
+        # remove " xmlns="http://ehb.local"" from the xml if present in it or ('<?xml version="1.0" encoding="UTF-8"?>', '') or similar (using re)
+        message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', "", message)
+        # usefull for debugging re (i hate re, wish I was a 10x dev 😔)
+        # print(f"cleaned message: {message}")
+        # parse xml
+        root = ET.fromstring(message)
+
+        # parse it to json
+        print("Parsed XML:")
+        json_data = {}
+
+        parse_element(root, json_data)
+
+        # add a timestamp if missing
+        if "timestamp" not in json_data:
+            timestamp = int(time.time())
+            json_data["timestamp"] = timestamp
+
+        json_message = json.dumps(json_data)
+        print(f"JSON message:\n{json_message}")
+
+        return json_message, json_data
+
+    def log_callback(ch, method, properties, body):
+        try:
+            json_message, _ = parse_xml_json(body)
+        except Exception as e:
+            print(f"\33[31mError parsing xml to json: {e}\33[0m")
+
+        # send to elasticsearch
+        try:
+            es.index(index="logs", body=json_message)
+        except Exception as e:
+            print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
+
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
-        
-        # ERROR: can't seem to load template.xsd
-    # DEBUG: Print the received message
-        # print(f"Received message: {message}")
-        
+
+        # this is mainly to debug invalid xml of other people, uncomment when needed
         # try:
-        #     # Load XSD file
-        #     with open('/app/template.xsd', 'r') as file:
-        #         xsd_content = file.read()
-            
-        #     print(f"Loaded XSD content: {xsd_content}")
-            
-        if validate_xml(message, '/app/template.xsd'):
-            print("Message validated successfully!")
-        else:
-            print("Message validation failed!")
-
-        # parse xml
+        #     validate_xml(message, "/app/template.xsd")
+        # except ValueError as e:
+        #     print(f"ERROR: received an invalid XML: {message}")
+        #     return
         try:
-            root = ET.fromstring(message)
-        except ET.ParseError:
-            print("\33[31mError parsing XML\33[0m")
-
-        # parse it to json
-        try:
-            print("Parsed XML:")
-            json_data = {}
-            for child in root:
-                print(child.tag, child.text)
-                # can't parse None into elasticsearch
-                if child.text is not None:
-                    json_data[child.tag] = child.text
-                else:
-                    json_data[child.tag] = "None"
-
-            # # convert timestamp to iso format
-            # we now use a unix/epoch in kibana, kept in case
-            # if is_timestamp(json_data["timestamp"]):
-            #     json_data["timestamp"] = convert_to_iso_timestamp(json_data["timestamp"])
-            #     print("converted timestamp:" + json_data["timestamp"])
-            # else:
-            #     print("\33[31mNot a valid timestamp or timestamp not in unix or no timestamp\33[0m")
-
-            json_message = json.dumps(json_data)
-            print("JSON message:")
-            print(json_message)
+            json_message, json_data = parse_xml_json(body)
         except Exception as e:
-            print(f"\33[31mError parsing  JSON: {e}\33[0m")
+            print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
         # send to elasticsearch
         try:
@@ -157,18 +189,19 @@ def main():
 
             current_timestamp = int(time.time())
             # this means we haven't received a heartbeat in 10s since the last one was sent
-            # -5s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
+            # -10s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
                 heartbeat_callback(
                     None,
                     None,
                     None,
-                    f"""<heartbeat>
+                    f"""<?xml version="1.0" encoding="UTF-8"?>
+                    <heartbeat xmlns="http://ehb.local">
                     <service>{service}</service>
                     <timestamp>{current_timestamp-5}</timestamp>
-                    <error>No heartbeat received</error>
                     <status>down</status>
-                </heartbeat>""".encode(
+                    <error>No heartbeat received</error>
+                    </heartbeat>""".encode(
                         "utf-8"
                     ),
                 )
@@ -212,9 +245,7 @@ def main():
             stop_callback_check_services_down()
 
             current_timestamp = int(time.time())
-            services_last_timestamp = {
-                service[0]: current_timestamp for service in services
-            }
+            services_last_timestamp = {service[0]: current_timestamp for service in services}
 
             create_callback_check_services_down(services)
 
@@ -227,38 +258,58 @@ def main():
     print(f"Host: {host}")
     print(f"Virtual Host: {virtual_host}")
     print(f"Queue: {queue}")
+    print(f"Log queue: {log_queue}")
     print("=====================================")
     credentials = pika.PlainCredentials(username, password)
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host=host, virtual_host=virtual_host, credentials=credentials
-        )
-    )
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue=queue)
+    channel.queue_declare(queue=log_queue)
 
     print("Connecting to Elasticsearch")
-    es = Elasticsearch(
-        ["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password)
-    )
+    es = Elasticsearch(["http://elasticsearch:9200"], basic_auth=(elastic_username, elastic_password))
     print("Waiting for Elasticsearch API to be up")
     while not es.ping():
-        time.sleep(1)
+        time.sleep(2)
     print("Connected to Elasticsearch")
+
+    index_settings = {
+        "properties": {
+            "timestamp": {"type": "date", "format": "epoch_second"},
+        }
+    }
+
+    # # delete the index, needed when an old indice is existing with other settings
+    # try:
+    #     es.indices.delete(index="heartbeat-rabbitmq")
+    #     es.indices.delete(index="logs")
+    #     print("Index deleted")
+    # except Exception as e:
+    #     print(f"Error deleting index: {e}")
 
     # create index if it doesn't exist
     try:
         es.indices.create(index="heartbeat-rabbitmq", ignore=400)
-        print("Index created")
+        es.indices.create(index="logs", ignore=400)
+        print("Indexes created")
+        # edit the index so that the timestamp value is a real timestamp
+        try:
+            es.indices.put_mapping(index="heartbeat-rabbitmq", body=index_settings, ignore=400)
+            es.indices.put_mapping(index="logs", body=index_settings, ignore=400)
+            print("Index settings updated")
+        except Exception as e:
+            print(f"Error updating index settings: {e}")
     except Exception as e:
         print(f"Error creating index: {e}")
+
+    # consume all messages to clear the queue (avoid to get false stat when we are down/starting/...)
+    channel.queue_purge(queue)
 
     print("Starting services update thread")
     threading.Thread(target=update_services, daemon=True).start()
 
-    channel.basic_consume(
-        queue=queue, on_message_callback=heartbeat_callback, auto_ack=True
-    )
+    channel.basic_consume(queue=queue, on_message_callback=heartbeat_callback, auto_ack=True)
+    channel.basic_consume(queue=log_queue, on_message_callback=log_callback, auto_ack=True)
     print("Waiting for msgs.")
     channel.start_consuming()
 
