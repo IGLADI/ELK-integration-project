@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import xml.etree.ElementTree as ET
+import xmlschema
 from datetime import datetime
 import re
 
@@ -26,6 +27,41 @@ def convert_to_iso_timestamp(input_str):
         return dt_object.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     else:
         return "Not a valid timestamp"
+
+
+def validate_xml(xml_string, xsd_file):
+    schema = xmlschema.XMLSchema(xsd_file)
+    xml = ET.fromstring(xml_string)
+
+    # for debugging other ppls heartbeats
+    errors = schema.iter_errors(xml)
+    for error in errors:
+        print(f"sourceline: {error.sourceline}; path: {error.path} | reason: {error.reason} | message: {error.message}")
+
+    if not schema.is_valid(xml):
+        raise ValueError("xml invalid")
+
+    # try:
+    #     # Convert Unicode strings to byte strings
+    #     xml_bytes = xml_file.encode()
+    #     xsd_bytes = xsd_file.encode()
+
+    #     # Parse XML document from byte string
+    #     xml_doc = etree.fromstring(xml_bytes)
+
+    #     # Parse XSD document from byte string
+    #     xsd_doc = etree.fromstring(xsd_bytes)
+
+    #     # Create XML schema object
+    #     xml_schema = etree.XMLSchema(etree.XML(xsd_doc))
+
+    #     # Validate XML document against XML schema
+    #     is_valid = xml_schema.validate(xml_doc)
+
+    #     return is_valid
+    # except Exception as e:
+    #     print(f"Error occurred during XML validation: {e}")
+    #     return False
 
 
 def main():
@@ -127,6 +163,14 @@ def main():
 
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
+        message = body.decode("utf-8")
+
+        # this is mainly to debug invalid xml of other people, uncomment when needed
+        # try:
+        #     validate_xml(message, "/app/template.xsd")
+        # except ValueError as e:
+        #     print(f"ERROR: received an invalid XML: {message}")
+        #     return
         try:
             json_message, json_data = parse_xml_json(body)
         except Exception as e:
@@ -149,19 +193,19 @@ def main():
 
             current_timestamp = int(time.time())
             # this means we haven't received a heartbeat in 10s since the last one was sent
-            # -5s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
+            # -10s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
                 heartbeat_callback(
                     None,
                     None,
                     None,
-                    f"""<heartbeat>
+                    f"""<?xml version="1.0" encoding="UTF-8"?>
+                    <heartbeat xmlns="http://ehb.local">
                     <service>{service}</service>
                     <timestamp>{current_timestamp-5}</timestamp>
-                    <error>No heartbeat received</error>
                     <status>down</status>
-                    <extra><message>Didn't received heartbeat in 5s</message></extra>
-                </heartbeat>""".encode(
+                    <error>No heartbeat received</error>
+                    </heartbeat>""".encode(
                         "utf-8"
                     ),
                 )
