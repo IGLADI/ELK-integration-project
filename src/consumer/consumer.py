@@ -111,7 +111,10 @@ def main():
                     tag = f"{og_tag}-{index}"
                 json_data[tag] = element.text
             else:
-                json_data[element.tag] = "No error"
+                if element.tag == "error":
+                    json_data[element.tag] = "No error"
+                else:
+                    json_data[element.tag] = "None"
         else:
             # recursively parse each child
             for child in element:
@@ -140,10 +143,6 @@ def main():
             timestamp = int(time.time())
             json_data["timestamp"] = timestamp
 
-        if "error" not in json_data:
-            error = ""
-            json_data["error"] = error
-
         json_message = json.dumps(json_data)
         print(f"JSON message:\n{json_message}")
 
@@ -164,6 +163,9 @@ def main():
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
+
+        if "error" not in message:
+            message += "<error></error>"
 
         # this is mainly to debug invalid xml of other people, uncomment when needed
         # try:
