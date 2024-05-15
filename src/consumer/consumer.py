@@ -112,7 +112,7 @@ def main():
                 json_data[tag] = element.text
             else:
                 if element.tag == "error":
-                    json_data[element.tag] = "No error"
+                    json_data[element.tag] = " "
                 else:
                     json_data[element.tag] = "None"
         else:
