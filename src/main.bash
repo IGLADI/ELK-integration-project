@@ -126,14 +126,14 @@ if [[ "${1,,}" == "setup" ]]; then
     fi
 
     # force recreate just in case the network is bugged (due to a previous version)
-    docker compose up setup --force-recreate -d
+    docker compose up setup --force-recreate --build -d
     # better if we way, more clean but can actually be skipped (will be slower as the rest will constantly restart withouth this sleep)
     sleep 60s
     fix_permissions
-    docker compose up setup-export --force-recreate -d
+    docker compose up setup-export --force-recreate --build -d
 
     # 1 restart for sealf healing
-    docker compose up -d && docker compose down && docker compose up -d
+    docker compose up --build -d && docker compose down && docker compose up -d
 
     # we could remove setup containers & images but they use 0 resources, will be down on first down
     finish
@@ -149,12 +149,6 @@ fi
 
 if [[ "${1,,}" == "stop" || "${1,,}" == "down" ]]; then
     docker compose down
-    # clear the src-consumer container image so it will be updated if changed on next up
-    docker image rm src-consumer:latest --force | echo "no consumer images to remove:"
-
-    # remove setups if active
-    docker rmi src-setup src-setup --force | echo "no setup images to remove:"
-    docker rmi src-setup src-setup-export --force | echo "no setup exporter images to remove:"
 
     echo "Stopped the environment"
 fi
