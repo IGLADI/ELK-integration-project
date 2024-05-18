@@ -6,14 +6,14 @@ if [ $(/usr/bin/id -u) -ne 0 ]; then
     echo "Waiting 10s as confirmation"
     sleep 10s
 else
-    fix_permissions() {
-        # chmod just in case
-        # should be changed with untrusted users
-        chmod -R 777 ../ELK/elasticsearch/data/
-        chmod +rwx ./setup/entrypoint.sh
-    }
     fix_permissions
 fi
+fix_permissions() {
+    # chmod just in case
+    # should be changed with untrusted users
+    chmod -R 777 ../ELK/elasticsearch/data/
+    chmod +rwx ./setup/entrypoint.sh
+}
 
 cd src || echo "already in src"
 
@@ -36,11 +36,6 @@ LOGGING_QUEUE=${10}
 
 # not case senitive
 if [[ "${1,,}" == "setup" ]]; then
-    if [ $(/usr/bin/id -u) -ne 0 ]; then
-        echo "DURING SETUP WE SERIOUSLY RECOMEND RUNNING THIS SCRIPT AS ROOT"
-        echo "Waiting 60s as confirmation"
-        sleep 60s
-    fi
     # just to tell  the user in what mode the script is running
     echo "Setting up for the first time"
 
