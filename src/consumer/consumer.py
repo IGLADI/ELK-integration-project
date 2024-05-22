@@ -212,6 +212,8 @@ def main():
                     ),
                 )
                 print(f"Didn't received heartbeat in 5s from {service}")
+                time.sleep(5)
+            else:
                 time.sleep(1)
 
     def stop_callback_check_services_down():
