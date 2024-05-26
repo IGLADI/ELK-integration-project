@@ -113,10 +113,7 @@ def main():
                     tag = f"{og_tag}-{index}"
                 json_data[tag] = element.text
             else:
-                if element.tag == "error":
-                    json_data[element.tag] = " "
-                else:
-                    json_data[element.tag] = "None"
+                json_data[element.tag] = "None"
         else:
             # recursively parse each child
             for child in element:
@@ -165,10 +162,7 @@ def main():
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
-
-        if "error" not in message:
-            message += "<error></error>"
-
+ 
         # this is mainly to debug invalid xml of other people, uncomment when needed
         # try:
         #     validate_xml(message, "/app/template.xsd")
@@ -179,7 +173,11 @@ def main():
             json_message, json_data = parse_xml_json(body)
         except Exception as e:
             print(f"\33[31mError parsion xml to json: {e}\33[0m")
- 
+        
+        if json_data["service"] in error_sent:
+            del error_sent[json_data["service"]]
+            send_error_email(ch,json_data["service"], int(time.time()), "up", "")
+
         # send to elasticsearch
         try:
             if json_data["service"] not in error_sent:
@@ -192,25 +190,34 @@ def main():
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
  
-    def send_error_email(channel, service, timestamp, status, error):
+    def send_error_email(channel,service, timestamp, status, error):
+        if service in error_sent:
+            return
         email_content = f"""
                         <heartbeat xmlns="http://ehb.local">
-                        <service>crm</service>
-                        <timestamp>12355332</timestamp>
-                        <status>down</status>
+                        <service>{service}</service>
+                        <timestamp>{timestamp}</timestamp>
+                        <status>{status}</status>
                         <error>no heartbeat received</error>
                         </heartbeat>"""
  
         try:
             publish_to_rabbitmq(channel, email_content)
             print("Email content published to RabbitMQ successfully.")
+            error_sent[service] = True
         except Exception as e:
             print(f"Error publishing email content to RabbitMQ: {e}")
  
     def check_service_down(service):
         global services_last_timestamp
         global thread_kill
- 
+        username = os.getenv("RABBITMQ_USERNAME")
+        password = os.getenv("RABBITMQ_PASSWORD")
+        host = os.getenv("RABBITMQ_HOST")
+        virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
+        channel = connection.channel()
         while True:
             if thread_kill:
                 break
@@ -234,7 +241,8 @@ def main():
                     ),
                 )
                 print(f"Didn't received heartbeat in 5s from {service}")
-                send_error_email(service, current_timestamp, "503", "down")
+                send_error_email(channel,service, current_timestamp, "unavailable", "no heartbeat received")
+                error_sent[service] = True
                 time.sleep(5)
             else:
                 time.sleep(1)
