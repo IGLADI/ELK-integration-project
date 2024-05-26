@@ -7,7 +7,7 @@ on:
             - main
 
 jobs:
-    build:
+    test:
         runs-on: ubuntu-latest
 
         steps:
@@ -25,19 +25,48 @@ jobs:
 
     deploy:
         runs-on: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
-        needs: build
+        needs: test
         steps:
+            # set everyone permission on the elasticsearch volume so the runner will always have perms to delete it
+            - name: change permissions for deletion
+              run: docker exec -u 0 elasticsearch chmod -R 777 /usr/share/elasticsearch/data
+
+            - name: stop ELK
+              run: cd ./src && bash ./main.bash down
+
             - uses: actions/checkout@v4
 
+            - name: create .env file based on github secrets
+              run: |
+                  cd src
+                  echo "ELASTIC_VERSION=8.12.2" > .env
+                  echo "ELASTIC_USERNAME=${{ secrets.ELASTIC_USERNAME }}" >> .env
+                  echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
+                  echo "KIBANA_SYSTEM_PASSWORD=${{ secrets.KIBANA_SYSTEM_PASSWORD }}" >> .env
+                  echo "RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}" >> .env
+                  echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
+                  echo "RABBITMQ_HOST=${{ github.ref == 'refs/heads/main' && '10.2.160.11' || '10.2.160.10' }}" >> .env
+                  echo "RABBITMQ_VIRTUAL_HOST=/" >> .env
+                  echo "RABBITMQ_QUEUE=heartbeat_queue" >> .env
+                  echo "LOGGING_QUEUE=logging_queue" >> .env
+
             - name: start rabbitmq
-              run: cd /monitoring/Monitoring/extra/rabbitmq_general_team && docker compose up -d
+              run: cd ./extra/rabbitmq_general_team && docker compose up -d
 
             # we assume the path is standard like on all of our servers
             - name: Deploy ELK
-              run: cd /monitoring/Monitoring/src && bash ./main.bash down && bash ./main.bash setup CD
+              run: cd ./src && bash ./main.bash setup CD
+
+            - name: create .env file for backup agent based on github secrets
+              run: |
+                  cd extra/backup_volumes_general_team
+                  echo "AWS_EXTRA_ARGS= --endpoint-url https://minio-api.glad-pi.uk" > .env
+                  echo "AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}" >> .env
+                  echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+                  echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
 
             - name: Deploy backup agent
-              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose down && docker compose up -d
+              run: cd ./extra/backup_volumes_general_team && docker compose down && docker compose up -d
 
             - name: Instantly do a backup
-              run: cd /monitoring/Monitoring/extra/backup_volumes_general_team && docker compose exec -T backup ./backup.sh < /dev/null
+              run: cd ./extra/backup_volumes_general_team && docker compose exec -T backup ./backup.sh < /dev/null
