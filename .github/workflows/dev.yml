@@ -27,6 +27,21 @@ jobs:
         runs-on: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
         needs: test
         steps:
+            # create the .env in case it has been wrongly deleted before
+            - name: create .env file based on github secrets
+              run: |
+                  cd src
+                  echo "ELASTIC_VERSION=8.12.2" > .env
+                  echo "ELASTIC_USERNAME=${{ secrets.ELASTIC_USERNAME }}" >> .env
+                  echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
+                  echo "KIBANA_SYSTEM_PASSWORD=${{ secrets.KIBANA_SYSTEM_PASSWORD }}" >> .env
+                  echo "RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}" >> .env
+                  echo "RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}" >> .env
+                  echo "RABBITMQ_HOST=${{ github.ref == 'refs/heads/main' && '10.2.160.11' || '10.2.160.10' }}" >> .env
+                  echo "RABBITMQ_VIRTUAL_HOST=/" >> .env
+                  echo "RABBITMQ_QUEUE=heartbeat_queue" >> .env
+                  echo "LOGGING_QUEUE=logging_queue" >> .env
+
             # set everyone permission on the elasticsearch volume so the runner will always have perms to delete it
             - name: change permissions for deletion
               run: docker exec -u 0 elasticsearch chmod -R 777 /usr/share/elasticsearch/data
