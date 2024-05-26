@@ -46,8 +46,9 @@ jobs:
                   echo "RABBITMQ_QUEUE=heartbeat_queue" >> .env
                   echo "LOGGING_QUEUE=logging_queue" >> .env
 
-            - name: start rabbitmq
-              run: cd ./extra/rabbitmq_general_team && docker compose up -d
+            # already started on all servers, some ppl don't try catch rabbitmq restart
+            # - name: start rabbitmq
+            #   run: cd ./extra/rabbitmq_general_team && docker compose up -d
 
             # we assume the path is standard like on all of our servers
             - name: Deploy ELK
