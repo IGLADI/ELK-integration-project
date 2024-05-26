@@ -11,7 +11,6 @@ fi
 fix_permissions() {
     # chmod just in case
     # should be changed with untrusted users
-    chmod -R 777 ../ELK/elasticsearch/data/
     chmod +rwx ./setup/entrypoint.sh
 }
 
