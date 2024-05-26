@@ -11,3 +11,8 @@ services:
             - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
         # no env vars: guest guest as its locally, we recommend to change this if exposed
         restart: always
+        logging:
+            driver: json-file
+            options:
+                mode: non-blocking
+                max-buffer-size: 10m
