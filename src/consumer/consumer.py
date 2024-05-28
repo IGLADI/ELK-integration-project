@@ -175,10 +175,13 @@ def main():
         except Exception as e:
             print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
-
+        # Send "Back online" email when service is back 
         service = json_data["service"]
         global error_sent
-
+        if service in error_sent:
+            error_sent.pop(service, None)
+            print("Service back online: ", service)
+            #send_error_email(ch, service, int(time.time()), "up", "")
 
         # send to elasticsearch
         try:
@@ -198,7 +201,6 @@ def main():
                         <status>{status}</status>
                         <error>no heartbeat received</error>
                         </heartbeat>"""
- 
         try:
             error_sent[service] = True
             publish_to_rabbitmq(channel, email_content)
