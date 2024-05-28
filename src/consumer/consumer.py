@@ -201,6 +201,20 @@ def main():
                         <status>{status}</status>
                         <error>no heartbeat received</error>
                         </heartbeat>"""
+        # Convert XML to JSON
+        message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', "", email_content)
+        root = ET.fromstring(message)
+        json_data = {}
+        parse_element(root, json_data)
+        json_message = json.dumps(json_data)
+
+        # Log to Elasticsearch
+        try:
+            es.index(index="heartbeat-rabbitmq", body=json_message)
+            error_sent[service] = True
+            print("Down status logged to Elasticsearch successfully.")
+        except Exception as e:
+            print(f"\33[31mError indexing down status to Elasticsearch: {e}\33[0m")
  
         try:
             error_sent[service] = True
