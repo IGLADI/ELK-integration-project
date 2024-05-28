@@ -177,10 +177,11 @@ def main():
 
         # Send "Back online" email when service is back 
         service = json_data["service"]
+        global error_sent
         if service in error_sent:
             error_sent.pop(service, None)
             print("Service back online: ", service)
-            send_error_email(ch, service, int(time.time()), "up", "")
+            #send_error_email(ch, service, int(time.time()), "up", "")
 
         # send to elasticsearch
         try:
@@ -190,7 +191,7 @@ def main():
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
             
     def send_error_email(channel,service, timestamp, status, error):
-        if service in error_sent:
+        if status == "down" in error_sent:
             return
         email_content = f"""
                         <heartbeat xmlns="http://ehb.local">
@@ -206,6 +207,7 @@ def main():
             print("Email content published to RabbitMQ successfully.")
         except Exception as e:
             print(f"Error publishing email content to RabbitMQ: {e}")
+
  
     def check_service_down(service):
         global services_last_timestamp
