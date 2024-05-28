@@ -190,8 +190,9 @@ def main():
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
             
-    def send_error_email(channel,service, timestamp, status, error):
-        if status == "down" in error_sent:
+    def send_error_email(channel, service, timestamp, status, error):
+        global error_sent
+        if service in error_sent:
             return
         email_content = f"""
                         <heartbeat xmlns="http://ehb.local">
@@ -230,7 +231,7 @@ def main():
             # -10s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
                 print(f"Didn't received heartbeat in 5s from {service}")
-                send_error_email(channel,service, current_timestamp, "unavailable", "no heartbeat received")
+                send_error_email(channel, service, current_timestamp, "unavailable", "no heartbeat received")
                 time.sleep(5)
             else:
                 time.sleep(1)
