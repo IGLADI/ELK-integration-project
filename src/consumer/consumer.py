@@ -99,6 +99,11 @@ def main():
     global error_sent
     error_sent = {}
 
+    global email_timestamps
+    email_timestamps = {}
+
+    EMAIL_INTERVAL = 60
+
     def parse_element(element, json_data, index=None):
         if len(element) == 0:
             # if no more child
@@ -192,7 +197,17 @@ def main():
             
     def send_error_email(channel, service, timestamp, status, error):
         global error_sent
+        global email_timestamps
+
+        current_time = time.time()
+        last_email_time = email_timestamps.get(service, 0)
+
+        if current_time - last_email_time < EMAIL_INTERVAL:
+            print(f"Rate limit active for service {service}. Email not sent.")
+            return
+            
         if service in error_sent:
+            print(f"Error email already sent for service {service}")
             return
         email_content = f"""
                         <heartbeat xmlns="http://ehb.local">
@@ -202,6 +217,7 @@ def main():
                         <error>no heartbeat received</error>
                         </heartbeat>"""
         try:
+            email_timestamps[service] = current_time
             error_sent[service] = True
             publish_to_rabbitmq(channel, email_content)
             print("Email content published to RabbitMQ successfully.")
