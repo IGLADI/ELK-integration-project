@@ -1,0 +1,17 @@
+services:
+  nginx-proxy:
+      image: "jc21/nginx-proxy-manager:latest"
+      container_name: nginx-proxy
+      ports:
+          # 80 is local port of frontend, we only add the https layer
+          - "81:81"
+          - "443:443"
+      volumes:
+          - nginx-data:/data
+          - letsencrypt:/etc/letsencrypt
+      restart: always
+
+# DONT FORGET TO UPDATE THE CONTENT ON ALL SERVER
+volumes:
+  letsencrypt:
+  nginx-data:
