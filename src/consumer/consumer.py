@@ -186,7 +186,7 @@ def main():
         # send to elasticsearch
         try:
             es.index(index="heartbeat-rabbitmq", body=json_message)
-            services_last_timestamp[json_data["service"]] = json_data["timestamp"]
+            services_last_timestamp[service] = json_data["timestamp"]
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
             
@@ -229,6 +229,12 @@ def main():
             # this means we haven't received a heartbeat in 10s since the last one was sent
             # -10s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
+                es.index(index="heartbeat-rabbitmq", body={
+                    'service': service,
+                    'timestamp': current_timestamp - 5,
+                    'status': 'down',
+                    'error': 'no heartbeat received'
+                })
                 print(f"Didn't received heartbeat in 5s from {service}")
                 send_error_email(channel, service, current_timestamp, "unavailable", "no heartbeat received")
                 time.sleep(5)
