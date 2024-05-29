@@ -123,7 +123,7 @@ def main():
 
     def parse_xml_json(body):
         message = body.decode("utf-8")
-        print(f"=====================================\nReceived message:{message}")
+        #print(f"=====================================\nReceived message:{message}")
 
         # remove " xmlns="http://ehb.local"" from the xml if present in it or ('<?xml version="1.0" encoding="UTF-8"?>', '') or similar (using re)
         message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', "", message)
@@ -133,7 +133,7 @@ def main():
         root = ET.fromstring(message)
 
         # parse it to json
-        print("Parsed XML:")
+        #print("Parsed XML:")
         json_data = {}
 
         parse_element(root, json_data)
@@ -144,7 +144,7 @@ def main():
             json_data["timestamp"] = timestamp
 
         json_message = json.dumps(json_data)
-        print(f"JSON message:\n{json_message}")
+        #print(f"JSON message:\n{json_message}")
 
         return json_message, json_data
 
@@ -176,10 +176,11 @@ def main():
             print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
         # Send "Back online" email when service is back 
+        service = json_data["service"]
         global error_sent
-        if  json_data["service"]in error_sent:
-            error_sent.pop(json_data["service"], None)
-            print("Service back online: ", json_data["service"])
+        if service in error_sent:
+            error_sent.pop(service, None)
+            print("Service back online: ", service)
             #send_error_email(ch, service, int(time.time()), "up", "")
 
         # send to elasticsearch
