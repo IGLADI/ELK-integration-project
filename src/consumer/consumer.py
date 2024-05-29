@@ -176,17 +176,16 @@ def main():
             print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
         # Send "Back online" email when service is back 
-        service = json_data["service"]
         global error_sent
-        if service in error_sent:
-            error_sent.pop(service, None)
-            print("Service back online: ", service)
+        if  json_data["service"]in error_sent:
+            error_sent.pop(json_data["service"], None)
+            print("Service back online: ", json_data["service"])
             #send_error_email(ch, service, int(time.time()), "up", "")
 
         # send to elasticsearch
         try:
             es.index(index="heartbeat-rabbitmq", body=json_message)
-            services_last_timestamp[service] = json_data["timestamp"]
+            services_last_timestamp[json_data["service"]] = json_data["timestamp"]
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
             
