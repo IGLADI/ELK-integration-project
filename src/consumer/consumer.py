@@ -96,6 +96,9 @@ def main():
     global services_last_timestamp
     services_last_timestamp = {}
 
+    global error_sent
+    error_sent = {}
+
     def parse_element(element, json_data, index=None):
         if len(element) == 0:
             # if no more child
@@ -111,10 +114,7 @@ def main():
                     tag = f"{og_tag}-{index}"
                 json_data[tag] = element.text
             else:
-                if element.tag == "error":
-                    json_data[element.tag] = " "
-                else:
-                    json_data[element.tag] = "None"
+                json_data[element.tag] = "None"
         else:
             # recursively parse each child
             for child in element:
@@ -123,7 +123,7 @@ def main():
 
     def parse_xml_json(body):
         message = body.decode("utf-8")
-        print(f"=====================================\nReceived message:{message}")
+        #print(f"=====================================\nReceived message:{message}")
 
         # remove " xmlns="http://ehb.local"" from the xml if present in it or ('<?xml version="1.0" encoding="UTF-8"?>', '') or similar (using re)
         message = re.sub(r'<\?xml[^>]*>|xmlns="http://ehb\.local"', "", message)
@@ -133,7 +133,7 @@ def main():
         root = ET.fromstring(message)
 
         # parse it to json
-        print("Parsed XML:")
+        #print("Parsed XML:")
         json_data = {}
 
         parse_element(root, json_data)
@@ -144,7 +144,7 @@ def main():
             json_data["timestamp"] = timestamp
 
         json_message = json.dumps(json_data)
-        print(f"JSON message:\n{json_message}")
+        #print(f"JSON message:\n{json_message}")
 
         return json_message, json_data
 
@@ -163,10 +163,7 @@ def main():
     # pylance lies, callbacks call 4 args
     def heartbeat_callback(ch, method, properties, body):
         message = body.decode("utf-8")
-
-        if "error" not in message:
-            message += "<error></error>"
-
+ 
         # this is mainly to debug invalid xml of other people, uncomment when needed
         # try:
         #     validate_xml(message, "/app/template.xsd")
@@ -178,16 +175,51 @@ def main():
         except Exception as e:
             print(f"\33[31mError parsion xml to json: {e}\33[0m")
 
+        # Send "Back online" email when service is back 
+        service = json_data["service"]
+        global error_sent
+        if service in error_sent:
+            error_sent.pop(service, None)
+            print("Service back online: ", service)
+            #send_error_email(ch, service, int(time.time()), "up", "")
+
         # send to elasticsearch
         try:
             es.index(index="heartbeat-rabbitmq", body=json_message)
-            services_last_timestamp[json_data["service"]] = json_data["timestamp"]
+            services_last_timestamp[service] = json_data["timestamp"]
         except Exception as e:
             print(f"\33[31mError indexing to Elasticsearch: {e}\33[0m")
+            
+    def send_error_email(channel, service, timestamp, status, error):
+        global error_sent
+        if service in error_sent:
+            return
+        email_content = f"""
+                        <heartbeat xmlns="http://ehb.local">
+                        <service>{service}</service>
+                        <timestamp>{timestamp}</timestamp>
+                        <status>{status}</status>
+                        <error>no heartbeat received</error>
+                        </heartbeat>"""
+        try:
+            error_sent[service] = True
+            publish_to_rabbitmq(channel, email_content)
+            print("Email content published to RabbitMQ successfully.")
+        except Exception as e:
+            print(f"Error publishing email content to RabbitMQ: {e}")
 
+ 
     def check_service_down(service):
         global services_last_timestamp
         global thread_kill
+        username = os.getenv("RABBITMQ_USERNAME")
+        password = os.getenv("RABBITMQ_PASSWORD")
+        host = os.getenv("RABBITMQ_HOST")
+        virtual_host = os.getenv("RABBITMQ_VIRTUAL_HOST")
+        credentials = pika.PlainCredentials(username, password)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, virtual_host=virtual_host, credentials=credentials))
+        channel = connection.channel()
+        channel.exchange_declare(exchange='amq.topic', exchange_type='topic', durable=True)
 
         while True:
             if thread_kill:
@@ -197,24 +229,20 @@ def main():
             # this means we haven't received a heartbeat in 10s since the last one was sent
             # -10s so afterwards it will be every 5s like they send us ups (for accumulative uptime) but still give them 3s room
             if current_timestamp - int(services_last_timestamp[service]) >= 10:
-                heartbeat_callback(
-                    None,
-                    None,
-                    None,
-                    f"""<?xml version="1.0" encoding="UTF-8"?>
-                    <heartbeat xmlns="http://ehb.local">
-                    <service>{service}</service>
-                    <timestamp>{current_timestamp-5}</timestamp>
-                    <status>down</status>
-                    <error>No heartbeat received</error>
-                    </heartbeat>""".encode(
-                        "utf-8"
-                    ),
-                )
+                es.index(index="heartbeat-rabbitmq", body={
+                    'service': service,
+                    'timestamp': current_timestamp - 5,
+                    'status': 'down',
+                    'error': 'no heartbeat received'
+                })
                 print(f"Didn't received heartbeat in 5s from {service}")
+                send_error_email(channel, service, current_timestamp, "unavailable", "no heartbeat received")
                 time.sleep(5)
             else:
                 time.sleep(1)
+
+    def publish_to_rabbitmq(channel, email_content):
+        channel.basic_publish(exchange="amq.topic", routing_key="service", body=email_content)
 
     def stop_callback_check_services_down():
         global thread_kill
